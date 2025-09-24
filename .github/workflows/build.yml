@@ -51,7 +51,10 @@ jobs:
         echo "rootProject.name = 'NotificationLogger'" > settings.gradle
         echo "include ':app'" >> settings.gradle
 
-        # Create build.gradle
+        # Create gradle.properties
+        echo "android.useAndroidX=true" > gradle.properties
+
+        # Create app/build.gradle
         cat > app/build.gradle <<'EOF'
         apply plugin: 'com.android.application'
 
