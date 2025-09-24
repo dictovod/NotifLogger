@@ -50,7 +50,12 @@ jobs:
         # Create build.gradle
         cat > build.gradle <<'EOF'
         plugins {
-            id 'com.android.application'
+            id 'com.android.application' version '8.2.0' apply false
+        }
+
+        repositories {
+            google()
+            mavenCentral()
         }
 
         android {
