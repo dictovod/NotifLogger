@@ -124,8 +124,7 @@ jobs:
         cat > app/src/main/AndroidManifest.xml <<'EOF'
         <?xml version="1.0" encoding="utf-8"?>
         <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-            xmlns:tools="http://schemas.android.com/tools"
-            package="com.example.notificationlogger">
+            xmlns:tools="http://schemas.android.com/tools">
 
             <uses-permission android:name="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" tools:ignore="ProtectedPermissions" />
             <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
@@ -134,7 +133,9 @@ jobs:
                 android:allowBackup="true"
                 android:label="Notification Logger"
                 android:supportsRtl="true">
-                <activity android:name=".MainActivity">
+                <activity
+                    android:name=".MainActivity"
+                    android:exported="true">
                     <intent-filter>
                         <action android:name="android.intent.action.MAIN" />
                         <category android:name="android.intent.category.LAUNCHER" />
@@ -144,7 +145,8 @@ jobs:
                 <service
                     android:name=".MainActivity$MyNotificationListener"
                     android:label="Notification Logger Service"
-                    android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+                    android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+                    android:exported="false">
                     <intent-filter>
                         <action android:name="android.service.notification.NotificationListenerService" />
                     </intent-filter>
