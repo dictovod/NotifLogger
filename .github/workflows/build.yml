@@ -139,10 +139,10 @@ jobs:
         <menu xmlns:android="http://schemas.android.com/apk/res/android">
             <item
                 android:id="@+id/menu_about"
-                android:title="About" />
+                android:title="О программе" />
             <item
                 android:id="@+id/menu_exit"
-                android:title="Exit" />
+                android:title="Выход" />
         </menu>
         EOF
 
@@ -189,6 +189,7 @@ jobs:
         import android.app.Activity;
         import android.app.Notification;
         import android.content.ContentValues;
+        import android.content.Context;
         import android.content.Intent;
         import android.database.sqlite.SQLiteDatabase;
         import android.database.sqlite.SQLiteOpenHelper;
@@ -234,23 +235,23 @@ jobs:
                 layout.addView(tv);
 
                 Button btnNotification = new Button(this);
-                btnNotification.setText("Grant Notification Access");
-                btnNotification.setBackgroundColor(0xFF6200EE); // Minimalistic purple button
+                btnNotification.setText("Предоставить доступ к уведомлениям");
+                btnNotification.setBackgroundColor(0xFF6200EE); // Минималистичный фиолетовый цвет кнопки
                 btnNotification.setTextColor(0xFFFFFFFF);
                 btnNotification.setOnClickListener(v -> requestNotificationPermission());
                 layout.addView(btnNotification);
 
                 Button btnStorage = new Button(this);
-                btnStorage.setText("Grant Storage Access");
-                btnStorage.setBackgroundColor(0xFF6200EE); // Minimalistic purple button
+                btnStorage.setText("Предоставить доступ к хранилищу");
+                btnStorage.setBackgroundColor(0xFF6200EE); // Минималистичный фиолетовый цвет кнопки
                 btnStorage.setTextColor(0xFFFFFFFF);
                 btnStorage.setOnClickListener(v -> requestStoragePermission());
                 layout.addView(btnStorage);
 
                 if (checkPermissions()) {
-                    tv.append("\nAll permissions granted.");
+                    tv.append("\nВсе разрешения предоставлены.");
                 } else {
-                    tv.append("\nPlease grant permissions.");
+                    tv.append("\nПожалуйста, предоставьте разрешения.");
                 }
 
                 setContentView(layout);
@@ -283,7 +284,7 @@ jobs:
                 super.onActivityResult(requestCode, resultCode, data);
                 if (requestCode == REQUEST_CODE_NOTIFICATION_LISTENER) {
                     if (checkPermissions()) {
-                        Toast.makeText(this, "All permissions granted.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "Все разрешения предоставлены.", Toast.LENGTH_SHORT).show();
                     }
                 }
             }
@@ -293,7 +294,7 @@ jobs:
                 super.onRequestPermissionsResult(requestCode, permissions, grantResults);
                 if (requestCode == REQUEST_CODE_STORAGE) {
                     if (checkPermissions()) {
-                        Toast.makeText(this, "All permissions granted.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "Все разрешения предоставлены.", Toast.LENGTH_SHORT).show();
                     }
                 }
             }
