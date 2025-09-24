@@ -407,8 +407,8 @@ jobs:
         }
         EOF
 
-        # Copy ic_launcher_playstore icon from Android SDK
-        cp -r $ANDROID_HOME/platforms/android-34/data/res/mipmap-*/* app/src/main/res/
+        # Copy ic_launcher_playstore icon from Android SDK with overwrite
+        cp -rf $ANDROID_HOME/platforms/android-34/data/res/mipmap-*/* app/src/main/res/
 
     - name: Build with Gradle
       run: |
