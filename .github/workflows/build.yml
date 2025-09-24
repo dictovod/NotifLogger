@@ -1,0 +1,33 @@
+name: Build Notification Logger
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Make build-notiflogger.sh executable
+        run: chmod +x build-notiflogger.sh
+
+      - name: Run build script
+        run: ./build-notiflogger.sh
+
+      - name: Upload built APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: notiflogger-apk
+          path: app/build/outputs/apk/debug/*.apk
