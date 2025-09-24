@@ -47,6 +47,7 @@ jobs:
         mkdir -p app/src/main/java/com/example/notificationlogger
         mkdir -p app/src/main/res/layout
         mkdir -p app/src/main/res/menu
+        mkdir -p app/src/main/res/mipmap-hdpi app/src/main/res/mipmap-mdpi app/src/main/res/mipmap-xhdpi app/src/main/res/mipmap-xxhdpi app/src/main/res/mipmap-xxxhdpi
 
         # Create settings.gradle
         echo "rootProject.name = 'NotificationLogger'" > settings.gradle
@@ -91,7 +92,6 @@ jobs:
             implementation 'androidx.core:core:1.12.0'
             implementation 'androidx.appcompat:appcompat:1.6.1'
             implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.8.22'
-            // Exclude conflicting Kotlin modules from appcompat
             implementation('androidx.appcompat:appcompat:1.6.1') {
                 exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7'
                 exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'
@@ -150,7 +150,8 @@ jobs:
         cat > app/src/main/AndroidManifest.xml <<'EOF'
         <?xml version="1.0" encoding="utf-8"?>
         <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-            xmlns:tools="http://schemas.android.com/tools">
+            xmlns:tools="http://schemas.android.com/tools"
+            package="com.example.notificationlogger">
 
             <uses-permission android:name="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" tools:ignore="ProtectedPermissions" />
             <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
@@ -159,7 +160,9 @@ jobs:
             <application
                 android:allowBackup="true"
                 android:label="Notification Logger"
-                android:supportsRtl="true">
+                android:supportsRtl="true"
+                android:icon="@mipmap/ic_launcher_playstore">
+
                 <activity
                     android:name=".MainActivity"
                     android:exported="true">
@@ -236,14 +239,14 @@ jobs:
 
                 Button btnNotification = new Button(this);
                 btnNotification.setText("Предоставить доступ к уведомлениям");
-                btnNotification.setBackgroundColor(0xFF6200EE); // Минималистичный фиолетовый цвет кнопки
+                btnNotification.setBackgroundColor(0xFF6200EE);
                 btnNotification.setTextColor(0xFFFFFFFF);
                 btnNotification.setOnClickListener(v -> requestNotificationPermission());
                 layout.addView(btnNotification);
 
                 Button btnStorage = new Button(this);
                 btnStorage.setText("Предоставить доступ к хранилищу");
-                btnStorage.setBackgroundColor(0xFF6200EE); // Минималистичный фиолетовый цвет кнопки
+                btnStorage.setBackgroundColor(0xFF6200EE);
                 btnStorage.setTextColor(0xFFFFFFFF);
                 btnStorage.setOnClickListener(v -> requestStoragePermission());
                 layout.addView(btnStorage);
@@ -403,6 +406,9 @@ jobs:
             }
         }
         EOF
+
+        # Copy ic_launcher_playstore icon from Android SDK
+        cp -r $ANDROID_HOME/platforms/android-34/data/res/mipmap-*/* app/src/main/res/
 
     - name: Build with Gradle
       run: |
