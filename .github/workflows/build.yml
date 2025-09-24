@@ -47,16 +47,13 @@ jobs:
         mkdir -p app/src/main/java/com/example/notificationlogger
         mkdir -p app/src/main/res/layout
 
-        # Create build.gradle
-        cat > build.gradle <<'EOF'
-        plugins {
-            id 'com.android.application' version '8.2.0' apply false
-        }
+        # Create settings.gradle
+        echo "rootProject.name = 'NotificationLogger'" > settings.gradle
+        echo "include ':app'" >> settings.gradle
 
-        repositories {
-            google()
-            mavenCentral()
-        }
+        # Create build.gradle
+        cat > app/build.gradle <<'EOF'
+        apply plugin: 'com.android.application'
 
         android {
             namespace 'com.example.notificationlogger'
@@ -87,9 +84,25 @@ jobs:
         }
         EOF
 
-        # Create settings.gradle
-        echo "rootProject.name = 'NotificationLogger'" > settings.gradle
-        echo "include ':app'" >> settings.gradle
+        # Create top-level build.gradle
+        cat > build.gradle <<'EOF'
+        buildscript {
+            repositories {
+                google()
+                mavenCentral()
+            }
+            dependencies {
+                classpath 'com.android.tools.build:gradle:8.2.0'
+            }
+        }
+
+        allprojects {
+            repositories {
+                google()
+                mavenCentral()
+            }
+        }
+        EOF
 
         # Create gradle-wrapper.properties
         mkdir -p gradle/wrapper
@@ -102,7 +115,7 @@ jobs:
         EOF
 
         # Create proguard-rules.pro
-        echo "" > proguard-rules.pro
+        echo "" > app/proguard-rules.pro
 
         # Create AndroidManifest.xml
         cat > app/src/main/AndroidManifest.xml <<'EOF'
@@ -125,7 +138,7 @@ jobs:
                 </activity>
 
                 <service
-                    android:name=".MainActivity\$MyNotificationListener"
+                    android:name=".MainActivity$MyNotificationListener"
                     android:label="Notification Logger Service"
                     android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
                     <intent-filter>
