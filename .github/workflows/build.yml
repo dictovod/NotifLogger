@@ -89,6 +89,7 @@ jobs:
             implementation 'androidx.appcompat:appcompat:1.6.1'
             implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
             implementation 'com.google.android.material:material:1.11.0'
+            implementation 'org.json:json:20210307' # Добавлено для JSONObject
         }
         EOF
 
@@ -513,7 +514,7 @@ jobs:
         import android.content.Intent;
         import android.content.SharedPreferences;
         import android.content.pm.PackageManager;
-        import android.os.Build;
+        import android.os.Bundle;
         import android.os.Environment;
         import android.provider.Settings;
         import android.telephony.TelephonyManager;
@@ -539,10 +540,11 @@ jobs:
         import androidx.viewpager.widget.ViewPager;
 
         import com.google.android.material.tabs.TabLayout;
+        import org.json.JSONException;
+        import org.json.JSONObject;
 
         import java.text.DateFormat;
         import java.text.ParseException;
-        import java.util.Base64;
         import java.util.Date;
 
         public class MainActivity extends AppCompatActivity {
@@ -607,7 +609,7 @@ jobs:
 
             private boolean validateToken(String token) {
                 try {
-                    byte[] decoded = Base64.getUrlDecoder().decode(token);
+                    byte[] decoded = android.util.Base64.decode(token, android.util.Base64.URL_SAFE);
                     JSONObject data = new JSONObject(new String(decoded));
                     String tokenImei = data.getString("imei");
                     String startDateStr = data.getString("start_date");
