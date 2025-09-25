@@ -18,6 +18,7 @@ public class MainActivity extends AppCompatActivity {
     private ImageView statusIcon;
     private TextView statusTitle;
     private TextView statusDescription;
+    private TextView deviceIdTextView; // Новый TextView для отображения Device ID
     private Button activateButton;
     private ImageButton settingsButton;
     
@@ -47,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
         statusIcon = findViewById(R.id.status_icon);
         statusTitle = findViewById(R.id.tv_status_title);
         statusDescription = findViewById(R.id.tv_status_description);
+        deviceIdTextView = findViewById(R.id.tv_device_id); // Предполагаем, что добавим этот элемент в layout
         activateButton = findViewById(R.id.btn_activate);
         settingsButton = findViewById(R.id.btn_settings);
         
@@ -81,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateUI() {
         boolean isActivated = activationManager.isActivated();
+        String deviceId = activationManager.getDeviceUniqueId(); // Получаем Device ID
         
         if (isActivated) {
             // Активированное состояние - цветная иконка
@@ -89,6 +92,10 @@ public class MainActivity extends AppCompatActivity {
             statusTitle.setText(R.string.status_activated);
             statusDescription.setText(R.string.status_description_activated);
             activateButton.setText(R.string.btn_go_to_settings);
+            if (deviceIdTextView != null) {
+                deviceIdTextView.setText(getString(R.string.device_id_label) + ": " + (deviceId != null ? deviceId : "Не удалось получить ID"));
+                deviceIdTextView.setVisibility(View.VISIBLE); // Показываем Device ID
+            }
             
             // Подсветка для активного состояния
             statusContainer.setElevation(12f);
@@ -100,6 +107,10 @@ public class MainActivity extends AppCompatActivity {
             statusTitle.setText(R.string.status_not_activated);
             statusDescription.setText(R.string.status_description_not_activated);
             activateButton.setText(R.string.btn_activate);
+            if (deviceIdTextView != null) {
+                deviceIdTextView.setText(getString(R.string.device_id_label) + ": " + (deviceId != null ? deviceId : "Не удалось получить ID"));
+                deviceIdTextView.setVisibility(View.VISIBLE); // Показываем Device ID
+            }
             
             statusContainer.setElevation(4f);
         }

@@ -17,14 +17,16 @@
         android:background="@drawable/bg_app_icon"
         android:padding="8dp"
         android:src="@drawable/ic_app_icon"
-        android:tint="@color/primary" />
+        android:contentDescription="Иконка приложения" />
 
     <!-- Content -->
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp">
 
         <!-- Header -->
         <LinearLayout
@@ -65,7 +67,7 @@
             android:textSize="13sp"
             android:maxLines="2"
             android:ellipsize="end"
-            android:layout_marginTop="2dp" />
+            android:layout_marginTop="4dp" />
 
         <!-- Action and Status -->
         <LinearLayout
@@ -73,7 +75,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginTop="4dp">
+            android:layout_marginTop="6dp">
 
             <TextView
                 android:id="@+id/tv_action"

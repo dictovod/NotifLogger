@@ -26,7 +26,6 @@ public class PermissionsActivity extends AppCompatActivity {
     
     private static final int REQUEST_NOTIFICATION_PERMISSION = 1001;
     private static final int REQUEST_STORAGE_PERMISSION = 1002;
-    private static final int REQUEST_PHONE_PERMISSION = 1003;
     
     private View notificationCard;
     private View storageCard;
@@ -82,13 +81,13 @@ public class PermissionsActivity extends AppCompatActivity {
     private void setupClickListeners() {
         notificationButton.setOnClickListener(v -> requestNotificationPermission());
         storageButton.setOnClickListener(v -> requestStoragePermission());
-        phoneButton.setOnClickListener(v -> requestPhonePermission());
+        phoneButton.setOnClickListener(v -> showPhoneInfo()); // Обновлено для информации
     }
 
     private void updatePermissionStates() {
         updateNotificationPermission();
         updateStoragePermission();
-        updatePhonePermission();
+        updatePhoneInfo(); // Обновлено для информации
     }
 
     private void updateNotificationPermission() {
@@ -138,25 +137,14 @@ public class PermissionsActivity extends AppCompatActivity {
         }
     }
 
-    private void updatePhonePermission() {
-        boolean hasPermission = ContextCompat.checkSelfPermission(this, 
-            Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED;
-        
-        if (hasPermission) {
-            phoneIcon.setImageResource(R.drawable.ic_check);
-            phoneIcon.setColorFilter(getColor(R.color.success));
-            phoneStatus.setText("Предоставлено");
-            phoneStatus.setTextColor(getColor(R.color.success));
-            phoneButton.setText("Настроить");
-            phoneButton.setEnabled(true);
-        } else {
-            phoneIcon.setImageResource(R.drawable.ic_warning);
-            phoneIcon.setColorFilter(getColor(R.color.warning));
-            phoneStatus.setText("Опционально");
-            phoneStatus.setTextColor(getColor(R.color.warning));
-            phoneButton.setText("Предоставить");
-            phoneButton.setEnabled(true);
-        }
+    private void updatePhoneInfo() {
+        // Теперь это информационное поле, так как READ_PHONE_STATE не требуется
+        phoneIcon.setImageResource(R.drawable.ic_info);
+        phoneIcon.setColorFilter(getColor(R.color.text_secondary));
+        phoneStatus.setText("Не требуется");
+        phoneStatus.setTextColor(getColor(R.color.text_secondary));
+        phoneButton.setText("Подробнее");
+        phoneButton.setEnabled(true);
     }
 
     private void requestNotificationPermission() {
@@ -214,34 +202,32 @@ public class PermissionsActivity extends AppCompatActivity {
         }
     }
 
-    private void requestPhonePermission() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) 
-                != PackageManager.PERMISSION_GRANTED) {
-            
-            showPermissionDialog(
-                "Доступ к состоянию телефона",
-                "Это разрешение нужно для получения реального IMEI устройства. " +
-                "Без него будет использоваться сгенерированный IMEI для демонстрации.\n\n" +
-                "Разрешение опционально.",
-                () -> {
-                    ActivityCompat.requestPermissions(this, 
-                        new String[]{Manifest.permission.READ_PHONE_STATE}, 
-                        REQUEST_PHONE_PERMISSION);
-                }
-            );
-        } else {
-            Utils.showToast(this, "Разрешение уже предоставлено");
-        }
+    private void showPhoneInfo() {
+        showPermissionDialog(
+            "Информация об идентификаторе",
+            "Приложение больше не требует разрешения на доступ к состоянию телефона (IMEI). " +
+            "Теперь используется уникальный идентификатор устройства (Device ID), который " +
+            "получается безопасно и не требует специальных разрешений.\n\n" +
+            "Если у вас есть вопросы, обратитесь в поддержку.",
+            null // Нет действия, только информация
+        );
     }
 
     private void showPermissionDialog(String title, String message, Runnable onConfirm) {
-        new AlertDialog.Builder(this)
+        AlertDialog.Builder builder = new AlertDialog.Builder(this)
                 .setTitle(title)
                 .setMessage(message)
                 .setIcon(R.drawable.ic_permissions)
-                .setPositiveButton("Предоставить", (dialog, which) -> onConfirm.run())
-                .setNegativeButton("Отмена", null)
-                .show();
+                .setCancelable(true);
+
+        if (onConfirm != null) {
+            builder.setPositiveButton("Предоставить", (dialog, which) -> onConfirm.run())
+                   .setNegativeButton("Отмена", null);
+        } else {
+            builder.setPositiveButton("Закрыть", (dialog, which) -> dialog.dismiss());
+        }
+
+        builder.show();
     }
 
     @Override
@@ -257,22 +243,12 @@ public class PermissionsActivity extends AppCompatActivity {
                                          @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         
-        switch (requestCode) {
-            case REQUEST_STORAGE_PERMISSION:
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Utils.showToast(this, "Разрешение предоставлено");
-                } else {
-                    Utils.showToast(this, "Разрешение отклонено");
-                }
-                break;
-                
-            case REQUEST_PHONE_PERMISSION:
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Utils.showToast(this, "Разрешение предоставлено");
-                } else {
-                    Utils.showToast(this, "Разрешение отклонено. Будет использоваться демо IMEI.");
-                }
-                break;
+        if (requestCode == REQUEST_STORAGE_PERMISSION) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Utils.showToast(this, "Разрешение предоставлено");
+            } else {
+                Utils.showToast(this, "Разрешение отклонено");
+            }
         }
         
         updatePermissionStates();

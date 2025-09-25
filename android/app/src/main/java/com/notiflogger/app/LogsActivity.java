@@ -87,6 +87,7 @@ public class LogsActivity extends AppCompatActivity {
         try {
             File logDir = new File(getExternalFilesDir(null), "notification_logs");
             if (!logDir.exists()) {
+                logDir.mkdirs(); // Создаём директорию, если её нет
                 return entries;
             }
             
@@ -134,6 +135,7 @@ public class LogsActivity extends AppCompatActivity {
                     }
                 } catch (Exception e) {
                     // Пропускаем некорректные строки
+                    continue;
                 }
             }
             
@@ -151,6 +153,7 @@ public class LogsActivity extends AppCompatActivity {
             .count();
         
         String stats = String.format(
+            Locale.getDefault(),
             "Всего записей: %d • Сегодня: %d",
             totalCount, todayCount
         );

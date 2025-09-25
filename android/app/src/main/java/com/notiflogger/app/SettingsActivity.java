@@ -34,7 +34,7 @@ public class SettingsActivity extends AppCompatActivity {
     private TextView expirationDateTextView;
     
     private ActivationManager activationManager;
-    private String deviceImei;
+    private String deviceId; // Изменили с deviceImei на deviceId для ясности
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,7 +45,7 @@ public class SettingsActivity extends AppCompatActivity {
         setupClickListeners();
         
         activationManager = new ActivationManager(this);
-        deviceImei = Utils.getDeviceIMEI(this);
+        deviceId = activationManager.getDeviceUniqueId(); // Используем новый метод
         
         updateUI();
     }
@@ -68,7 +68,7 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void setupClickListeners() {
-        copyButton.setOnClickListener(v -> copyImeiToClipboard());
+        copyButton.setOnClickListener(v -> copyDeviceIdToClipboard());
         activateButton.setOnClickListener(v -> performActivation());
         if (debugButton != null) {
             debugButton.setOnClickListener(v -> debugToken());
@@ -76,8 +76,8 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void updateUI() {
-        // Отображаем IMEI
-        imeiTextView.setText(deviceImei);
+        // Отображаем Device ID
+        imeiTextView.setText(deviceId != null ? deviceId : "Не удалось получить Device ID");
         
         // Обновляем статус активации
         boolean isActivated = activationManager.isActivated();
@@ -114,9 +114,9 @@ public class SettingsActivity extends AppCompatActivity {
         }
     }
 
-    private void copyImeiToClipboard() {
+    private void copyDeviceIdToClipboard() {
         ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-        ClipData clip = ClipData.newPlainText("IMEI", deviceImei);
+        ClipData clip = ClipData.newPlainText("Device ID", deviceId != null ? deviceId : "Не удалось получить ID");
         clipboard.setPrimaryClip(clip);
         
         // Показываем анимацию копирования
@@ -125,7 +125,7 @@ public class SettingsActivity extends AppCompatActivity {
             copyButton.setImageResource(R.drawable.ic_copy);
         }, 2000);
         
-        Utils.showToast(this, getString(R.string.imei_copied));
+        Utils.showToast(this, getString(R.string.device_id_copied)); // Обновим строку в strings.xml
     }
 
     private void performActivation() {
@@ -152,7 +152,7 @@ public class SettingsActivity extends AppCompatActivity {
         
         // Выполняем активацию в фоновом потоке
         new Thread(() -> {
-            boolean success = activationManager.validateAndActivate(deviceImei, token);
+            boolean success = activationManager.validateAndActivate(deviceId, token); // Используем deviceId
             
             runOnUiThread(() -> {
                 if (success) {

@@ -1,5 +1,7 @@
 package com.notiflogger.app;
 
+import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,9 +19,11 @@ import java.util.List;
 public class LogsAdapter extends RecyclerView.Adapter<LogsAdapter.LogViewHolder> {
     
     private final List<LogsActivity.LogEntry> logEntries;
+    private final PackageManager packageManager; // Для загрузки иконок приложений
 
     public LogsAdapter(List<LogsActivity.LogEntry> logEntries) {
         this.logEntries = logEntries;
+        this.packageManager = logEntries.isEmpty() ? null : logEntries.get(0).itemView.getContext().getPackageManager();
     }
 
     @NonNull
@@ -87,14 +91,24 @@ public class LogsAdapter extends RecyclerView.Adapter<LogsAdapter.LogViewHolder>
             // Показываем индикатор для постоянных уведомлений
             ongoingIndicator.setVisibility(entry.ongoing ? View.VISIBLE : View.GONE);
             
-            // Иконка приложения (можно улучшить, загружая реальные иконки)
-            iconView.setImageResource(R.drawable.ic_app_icon);
+            // Загружаем иконку приложения (попытка получить реальную иконку)
+            loadAppIcon(entry.packageName, iconView);
             
-            // Обработка нажатия (опционально)
-            itemView.setOnClickListener(v -> {
-                // Показать детали уведомления
-                showNotificationDetails(entry);
-            });
+            // Обработка нажатия
+            itemView.setOnClickListener(v -> showNotificationDetails(entry));
+        }
+        
+        private void loadAppIcon(String packageName, ImageView iconView) {
+            if (packageManager != null) {
+                try {
+                    Drawable icon = packageManager.getApplicationIcon(packageName);
+                    iconView.setImageDrawable(icon);
+                } catch (PackageManager.NameNotFoundException e) {
+                    iconView.setImageResource(R.drawable.ic_app_icon); // Фallback на дефолтную иконку
+                }
+            } else {
+                iconView.setImageResource(R.drawable.ic_app_icon); // Фallback, если packageManager недоступен
+            }
         }
         
         private void showNotificationDetails(LogsActivity.LogEntry entry) {

@@ -287,7 +287,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Доступ к состоянию телефона"
+                            android:text="Идентификатор устройства"
                             android:textColor="@color/text_primary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -296,14 +296,14 @@
                             android:id="@+id/status_phone"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Опционально"
+                            android:text="Не требуется"
                             android:textSize="14sp"
                             android:layout_marginTop="2dp" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Для получения реального IMEI устройства"
+                            android:text="Теперь используется безопасный Device ID, не требующий специальных разрешений"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp"
                             android:layout_marginTop="4dp" />
@@ -314,7 +314,7 @@
                         style="@style/SecondaryButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Предоставить"
+                        android:text="Подробнее"
                         android:textSize="12sp"
                         android:minWidth="0dp"
                         android:paddingStart="12dp"

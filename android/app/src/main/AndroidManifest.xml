@@ -5,18 +5,15 @@
     <!-- Разрешения для логирования уведомлений -->
     <uses-permission android:name="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" 
         tools:ignore="ProtectedPermissions" />
-    
-    <!-- Разрешения для сохранения логов -->
+
+    <!-- Разрешения для сохранения логов (только для Android <10) -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" 
         android:maxSdkVersion="28" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" 
         android:maxSdkVersion="28" />
-    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
-        tools:ignore="ScopedStorage" />
-    
-    <!-- Разрешения для получения IMEI -->
-    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-    
+
+    <!-- Убрано разрешение READ_PHONE_STATE, так как используем ANDROID_ID -->
+
     <!-- Интернет для валидации токенов -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
