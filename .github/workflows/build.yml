@@ -514,7 +514,6 @@ jobs:
         import android.content.SharedPreferences;
         import android.content.pm.PackageManager;
         import android.os.Build;
-        import android.os.Bundle;
         import android.os.Environment;
         import android.provider.Settings;
         import android.telephony.TelephonyManager;
@@ -541,11 +540,10 @@ jobs:
 
         import com.google.android.material.tabs.TabLayout;
 
-        import java.util.Base64;
         import java.text.DateFormat;
         import java.text.ParseException;
-        import org.json.JSONException;
-        import org.json.JSONObject;
+        import java.util.Base64;
+        import java.util.Date;
 
         public class MainActivity extends AppCompatActivity {
             private static final int REQUEST_CODE_NOTIFICATION_LISTENER = 1001;
