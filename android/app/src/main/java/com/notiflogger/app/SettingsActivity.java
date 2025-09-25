@@ -18,7 +18,7 @@ import java.util.Date;
 import java.util.Locale;
 
 public class SettingsActivity extends AppCompatActivity {
-    private TextView imeiTextView;
+    private TextView deviceIdTextView;
     private TextInputEditText tokenEditText;
     private Button activateButton;
     private Button debugButton;
@@ -28,6 +28,8 @@ public class SettingsActivity extends AppCompatActivity {
     private TextView activationStatusTextView;
     private LinearLayout expirationLayout;
     private TextView expirationDateTextView;
+    private LinearLayout tokenCreationLayout;
+    private TextView tokenCreationDateTextView;
     private ActivationManager activationManager;
     private String deviceId;
 
@@ -44,7 +46,7 @@ public class SettingsActivity extends AppCompatActivity {
 
     private void initViews() {
         findViewById(R.id.btn_back).setOnClickListener(v -> finish());
-        imeiTextView = findViewById(R.id.tv_imei);
+        deviceIdTextView = findViewById(R.id.tv_imei);
         tokenEditText = findViewById(R.id.et_token);
         activateButton = findViewById(R.id.btn_activate);
         copyButton = findViewById(R.id.btn_copy_imei);
@@ -53,6 +55,8 @@ public class SettingsActivity extends AppCompatActivity {
         activationStatusTextView = findViewById(R.id.tv_activation_status);
         expirationLayout = findViewById(R.id.layout_expiration);
         expirationDateTextView = findViewById(R.id.tv_expiration_date);
+        tokenCreationLayout = findViewById(R.id.layout_token_creation);
+        tokenCreationDateTextView = findViewById(R.id.tv_token_creation_date);
         createDebugButton();
     }
 
@@ -63,23 +67,29 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void updateUI() {
-        imeiTextView.setText(deviceId != null ? deviceId : "Не удалось получить Device ID");
+        deviceIdTextView.setText(deviceId != null ? deviceId : "Не удалось получить Device ID");
         boolean isActivated = activationManager.isActivated();
         if (isActivated) {
-            activationStatusTextView.setText("Активировано");
+            activationStatusTextView.setText(R.string.status_activated);
             activationStatusTextView.setTextColor(getColor(R.color.success));
             long expirationTime = activationManager.getExpirationTime();
+            String tokenCreationDate = activationManager.getTokenCreationDate();
             if (expirationTime > 0) {
                 expirationLayout.setVisibility(View.VISIBLE);
                 SimpleDateFormat sdf = new SimpleDateFormat("dd MMMM yyyy, HH:mm", new Locale("ru"));
                 expirationDateTextView.setText(sdf.format(new Date(expirationTime)));
             }
-            activateButton.setText("Активировано");
+            if (!TextUtils.isEmpty(tokenCreationDate)) {
+                tokenCreationLayout.setVisibility(View.VISIBLE);
+                tokenCreationDateTextView.setText(tokenCreationDate);
+            }
+            activateButton.setText(R.string.status_activated);
             activateButton.setEnabled(false);
         } else {
-            activationStatusTextView.setText("Не активировано");
+            activationStatusTextView.setText(R.string.status_not_activated);
             activationStatusTextView.setTextColor(getColor(R.color.error));
             expirationLayout.setVisibility(View.GONE);
+            tokenCreationLayout.setVisibility(View.GONE);
             activateButton.setText(R.string.btn_activate_app);
             activateButton.setEnabled(true);
         }

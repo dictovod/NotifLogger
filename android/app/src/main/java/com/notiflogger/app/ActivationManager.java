@@ -19,8 +19,7 @@ public class ActivationManager {
     private static final String KEY_IS_ACTIVATED = "is_activated";
     private static final String KEY_ACTIVATION_TIME = "activation_time";
     private static final String KEY_EXPIRATION_TIME = "expiration_time";
-    private static final String KEY_DEVICE_ID = "device_id"; // Заменено с KEY_DEVICE_IMEI
-    private static final String KEY_TOKEN_UUID = "token_uuid";
+    private static final String KEY_DEVICE_ID = "device_id";
     private static final String KEY_TOKEN_CREATION_DATE = "token_creation_date";
     private static final String TAG = "ActivationManager";
     private final SharedPreferences preferences;
@@ -53,11 +52,10 @@ public class ActivationManager {
             Log.d(TAG, "Decoded JSON: " + decodedJson);
             writeToDebugFile("Decoded JSON: " + decodedJson);
             JSONObject tokenData = new JSONObject(decodedJson);
-            String tokenDeviceId = tokenData.optString("device_id", null); // Заменено с imei
-            String tokenUuid = tokenData.optString("uuid", null);
+            String tokenDeviceId = tokenData.optString("device_id", null);
             String creationDateStr = tokenData.optString("start_date", null);
             long durationSeconds = tokenData.optLong("duration_seconds", -1);
-            if (tokenDeviceId == null || tokenUuid == null || creationDateStr == null || durationSeconds == -1) {
+            if (tokenDeviceId == null || creationDateStr == null || durationSeconds == -1) {
                 Log.e(TAG, "Missing token data");
                 writeToDebugFile("Error: Missing token data");
                 return false;
@@ -73,9 +71,9 @@ public class ActivationManager {
             Log.d(TAG, "Token creation time: " + creationDateStr);
             Log.d(TAG, "Expiration time: " + expirationDate);
             writeToDebugFile("Current time: " + currentDate + "\nToken creation time: " + creationDateStr + "\nExpiration time: " + expirationDate);
-            saveActivation(deviceId, tokenUuid, currentDate.getTime(), expirationDate.getTime(), creationDateStr);
-            Log.i(TAG, "Activation successful: deviceId=" + deviceId + ", uuid=" + tokenUuid);
-            writeToDebugFile("Success: Activation successful: deviceId=" + deviceId + ", uuid=" + tokenUuid);
+            saveActivation(deviceId, currentDate.getTime(), expirationDate.getTime(), creationDateStr);
+            Log.i(TAG, "Activation successful: deviceId=" + deviceId);
+            writeToDebugFile("Success: Activation successful: deviceId=" + deviceId);
             return true;
         } catch (Exception e) {
             Log.e(TAG, "Token validation error: " + e.getMessage(), e);
@@ -120,25 +118,23 @@ public class ActivationManager {
                 .putBoolean(KEY_IS_ACTIVATED, false)
                 .putLong(KEY_ACTIVATION_TIME, 0)
                 .putLong(KEY_EXPIRATION_TIME, 0)
-                .putString(KEY_DEVICE_ID, "") // Заменено с KEY_DEVICE_IMEI
-                .putString(KEY_TOKEN_UUID, "")
+                .putString(KEY_DEVICE_ID, "")
                 .putString(KEY_TOKEN_CREATION_DATE, "")
                 .apply();
         Log.i(TAG, "Activation data cleared");
         writeToDebugFile("Info: Activation data cleared");
     }
 
-    private void saveActivation(String deviceId, String tokenUuid, long activationTime, long expirationTime, String creationDate) {
+    private void saveActivation(String deviceId, long activationTime, long expirationTime, String creationDate) {
         preferences.edit()
                 .putBoolean(KEY_IS_ACTIVATED, true)
                 .putLong(KEY_ACTIVATION_TIME, activationTime)
                 .putLong(KEY_EXPIRATION_TIME, expirationTime)
-                .putString(KEY_DEVICE_ID, deviceId) // Заменено с KEY_DEVICE_IMEI
-                .putString(KEY_TOKEN_UUID, tokenUuid)
+                .putString(KEY_DEVICE_ID, deviceId)
                 .putString(KEY_TOKEN_CREATION_DATE, creationDate)
                 .apply();
-        Log.i(TAG, "Activation data saved: deviceId=" + deviceId + ", uuid=" + tokenUuid + ", creationDate=" + creationDate);
-        writeToDebugFile("Info: Activation data saved: deviceId=" + deviceId + ", uuid=" + tokenUuid + ", creationDate=" + creationDate);
+        Log.i(TAG, "Activation data saved: deviceId=" + deviceId + ", creationDate=" + creationDate);
+        writeToDebugFile("Info: Activation data saved: deviceId=" + deviceId + ", creationDate=" + creationDate);
     }
 
     public String getDeviceUniqueId() {
@@ -185,12 +181,10 @@ public class ActivationManager {
                 writeToDebugFile("Debug JSON error: " + e.getMessage());
                 return debug.toString();
             }
-            String tokenDeviceId = tokenData.optString("device_id", "NONE"); // Заменено с imei
-            String tokenUuid = tokenData.optString("uuid", "NONE");
+            String tokenDeviceId = tokenData.optString("device_id", "NONE");
             String creationDateStr = tokenData.optString("start_date", "NONE");
             long durationSeconds = tokenData.optLong("duration_seconds", -1);
             debug.append("Token Device ID: ").append(tokenDeviceId).append("\n");
-            debug.append("UUID: ").append(tokenUuid).append("\n");
             debug.append("Token creation date: ").append(creationDateStr).append("\n");
             debug.append("Duration: ").append(durationSeconds).append(" sec\n");
             if (deviceId != null && tokenDeviceId.equals(deviceId)) {
@@ -219,17 +213,15 @@ public class ActivationManager {
         if (!isActivated()) return "Application not activated";
         long activationTime = getActivationTime();
         long expirationTime = getExpirationTime();
-        String deviceId = preferences.getString(KEY_DEVICE_ID, ""); // Заменено с KEY_DEVICE_IMEI
-        String uuid = preferences.getString(KEY_TOKEN_UUID, "");
+        String deviceId = preferences.getString(KEY_DEVICE_ID, "");
         String creationDate = preferences.getString(KEY_TOKEN_CREATION_DATE, "");
         SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss", Locale.getDefault());
         return String.format(
-            "Activated: %s\nExpires: %s\nToken created: %s\nDevice ID: %s\nUUID: %s",
+            "Activated: %s\nExpires: %s\nToken created: %s\nDevice ID: %s",
             sdf.format(new Date(activationTime)),
             sdf.format(new Date(expirationTime)),
             creationDate,
-            deviceId,
-            uuid
+            deviceId
         );
     }
 

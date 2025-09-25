@@ -13,8 +13,8 @@
 
     <!-- Settings Activity -->
     <string name="settings_title">Настройки активации</string>
-    <string name="device_id_title">Device ID устройства</string> <!-- Изменено с device_imei_title -->
-    <string name="copy_device_id_description">Скопируйте Device ID и отправьте для получения токена активации</string> <!-- Изменено с copy_imei_description -->
+    <string name="device_id_title">Device ID устройства</string>
+    <string name="copy_device_id_description">Скопируйте Device ID и отправьте для получения токена активации</string>
     <string name="token_input_title">Токен активации</string>
     <string name="token_input_hint">Вставьте полученный токен активации...</string>
     <string name="btn_activate_app">Активировать приложение</string>
