@@ -23,7 +23,8 @@ jobs:
     - name: Set up Android SDK
       uses: android-actions/setup-android@v3
       with:
-        sdk-version: '34'
+        cmdline-tools-version: '12266719'
+        accept-android-sdk-licenses: true
 
     - name: Cache Gradle
       uses: actions/cache@v4
@@ -37,15 +38,15 @@ jobs:
     - name: Create project structure
       run: |
         mkdir -p app/src/main/java/com/example/notificationlogger
-        mkdir -p app/src/main/res/layout
-        mkdir -p app/src/main/res/menu
-        mkdir -p app/src/main/res/drawable
-        mkdir -p app/src/main/res/values
-        mkdir -p app/src/main/res/mipmap-hdpi app/src/main/res/mipmap-mdpi app/src/main/res/mipmap-xhdpi app/src/main/res/mipmap-xxhdpi app/src/main/res/mipmap-xxxhdpi
+        mkdir -p app/src/main/res/{layout,menu,drawable,values,xml}
+        mkdir -p app/src/main/res/mipmap-{hdpi,mdpi,xhdpi,xxhdpi,xxxhdpi}
+        mkdir -p gradle/wrapper
 
         # Create settings.gradle
-        echo "rootProject.name = 'NotificationLogger'" > settings.gradle
-        echo "include ':app'" >> settings.gradle
+        cat > settings.gradle <<'EOF'
+        rootProject.name = 'NotificationLogger'
+        include ':app'
+        EOF
 
         # Create gradle.properties
         cat > gradle.properties <<'EOF'
@@ -70,7 +71,6 @@ jobs:
                 targetSdk 34
                 versionCode 1
                 versionName "1.0"
-                testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
             }
 
             buildTypes {
@@ -106,7 +106,6 @@ jobs:
         EOF
 
         # Create gradle-wrapper.properties
-        mkdir -p gradle/wrapper
         cat > gradle/wrapper/gradle-wrapper.properties <<'EOF'
         distributionBase=GRADLE_USER_HOME
         distributionPath=wrapper/dists
@@ -116,8 +115,144 @@ jobs:
         zipStorePath=wrapper/dists
         EOF
 
+        # Create gradle-wrapper.jar (download)
+        curl -L https://github.com/gradle/gradle/raw/v8.2.0/gradle/wrapper/gradle-wrapper.jar -o gradle/wrapper/gradle-wrapper.jar
+
+        # Create gradlew script
+        cat > gradlew <<'EOF'
+        #!/bin/sh
+        APP_NAME="Gradle"
+        APP_BASE_NAME=$(basename "$0")
+        DEFAULT_JVM_OPTS='"-Xmx64m" "-Xms64m"'
+        GRADLE_OPTS=""
+        JAVA_OPTS=""
+
+        # Determine the Java command to use to start the JVM.
+        if [ -n "$JAVA_HOME" ] ; then
+            if [ -x "$JAVA_HOME/jre/sh/java" ] ; then
+                # IBM's JDK on AIX uses strange locations for the executables
+                JAVACMD="$JAVA_HOME/jre/sh/java"
+            else
+                JAVACMD="$JAVA_HOME/bin/java"
+            fi
+            if [ ! -x "$JAVACMD" ] ; then
+                die "ERROR: JAVA_HOME is set to an invalid directory: $JAVA_HOME"
+            fi
+        else
+            JAVACMD="java"
+            which java >/dev/null 2>&1 || die "ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH."
+        fi
+
+        # Escape application args
+        save () {
+            for i do printf %s\\n "$i" | sed "s/'/'\\\\''/g;1s/^/'/;\$s/\$/' \\\\/" ; done
+            echo " "
+        }
+        APP_ARGS=$(save "$@")
+
+        # Collect all arguments for the java command
+        eval set -- $DEFAULT_JVM_OPTS $JAVA_OPTS $GRADLE_OPTS "\"-Dorg.gradle.appname=$APP_BASE_NAME\"" -classpath "\"gradle/wrapper/gradle-wrapper.jar\"" org.gradle.wrapper.GradleWrapperMain "$APP_ARGS"
+
+        exec "$JAVACMD" "$@"
+        EOF
+
+        chmod +x gradlew
+
+        # Create gradlew.bat
+        cat > gradlew.bat <<'EOF'
+        @rem
+        @rem Copyright 2015 the original author or authors.
+        @rem
+        @rem Licensed under the Apache License, Version 2.0 (the "License");
+        @rem you may not use this file except in compliance with the License.
+        @rem You may obtain a copy of the License at
+        @rem
+        @rem      https://www.apache.org/licenses/LICENSE-2.0
+        @rem
+        @rem Unless required by applicable law or agreed to in writing, software
+        @rem distributed under the License is distributed on an "AS IS" BASIS,
+        @rem WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        @rem See the License for the specific language governing permissions and
+        @rem limitations under the License.
+        @rem
+
+        @if "%DEBUG%" == "" @echo off
+        @rem ##########################################################################
+        @rem
+        @rem  Gradle startup script for Windows
+        @rem
+        @rem ##########################################################################
+
+        @rem Set local scope for the variables with windows NT shell
+        if "%OS%"=="Windows_NT" setlocal
+
+        set DIRNAME=%~dp0
+        if "%DIRNAME%" == "" set DIRNAME=.
+        set APP_BASE_NAME=%~n0
+        set APP_HOME=%DIRNAME%
+
+        @rem Resolve any "." and ".." in APP_HOME to make it shorter.
+        for %%i in ("%APP_HOME%") do set APP_HOME=%%~fi
+
+        @rem Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
+        set DEFAULT_JVM_OPTS="-Xmx64m" "-Xms64m"
+
+        @rem Find java.exe
+        if defined JAVA_HOME goto findJavaFromJavaHome
+
+        set JAVA_EXE=java.exe
+        %JAVA_EXE% -version >NUL 2>&1
+        if "%ERRORLEVEL%" == "0" goto execute
+
+        echo.
+        echo ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH.
+        echo.
+        echo Please set the JAVA_HOME variable in your environment to match the
+        echo location of your Java installation.
+
+        goto fail
+
+        :findJavaFromJavaHome
+        set JAVA_HOME=%JAVA_HOME:"=%
+        set JAVA_EXE=%JAVA_HOME%/bin/java.exe
+
+        if exist "%JAVA_EXE%" goto execute
+
+        echo.
+        echo ERROR: JAVA_HOME is set to an invalid directory: %JAVA_HOME%
+        echo.
+        echo Please set the JAVA_HOME variable in your environment to match the
+        echo location of your Java installation.
+
+        goto fail
+
+        :execute
+        @rem Setup the command line
+
+        set CLASSPATH=%APP_HOME%\gradle\wrapper\gradle-wrapper.jar
+
+
+        @rem Execute Gradle
+        "%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% %GRADLE_OPTS% "-Dorg.gradle.appname=%APP_BASE_NAME%" -classpath "%CLASSPATH%" org.gradle.wrapper.GradleWrapperMain %*
+
+        :end
+        @rem End local scope for the variables with windows NT shell
+        if "%ERRORLEVEL%"=="0" goto mainEnd
+
+        :fail
+        rem Set variable GRADLE_EXIT_CONSOLE if you need the _script_ return code instead of
+        rem the _cmd_ return code when the batch file is called from another batch file.
+        if not "" == "%GRADLE_EXIT_CONSOLE%" exit 1
+        exit /b 1
+
+        :mainEnd
+        if "%OS%"=="Windows_NT" endlocal
+
+        :omega
+        EOF
+
         # Create proguard-rules.pro
-        echo "" > app/proguard-rules.pro
+        touch app/proguard-rules.pro
 
         # Create strings.xml
         cat > app/src/main/res/values/strings.xml <<'EOF'
@@ -173,7 +308,7 @@ jobs:
             <ImageView
                 android:layout_width="120dp"
                 android:layout_height="120dp"
-                android:src="@mipmap/ic_launcher"
+                android:src="@drawable/ic_notification"
                 android:layout_marginBottom="32dp" />
 
             <TextView
@@ -222,12 +357,17 @@ jobs:
             android:height="24dp"
             android:viewportWidth="24"
             android:viewportHeight="24"
-            android:tint="#FFFFFF">
+            android:tint="@color/purple_500">
             <path
                 android:fillColor="#FF000000"
                 android:pathData="M12,22c1.1,0 2,-0.9 2,-2h-4c0,1.1 0.89,2 2,2zM18,16v-5c0,-3.07 -1.64,-5.64 -4.5,-6.32V4c0,-0.83 -0.67,-1.5 -1.5,-1.5s-1.5,0.67 -1.5,1.5v0.68C7.63,5.36 6,7.92 6,11v5l-2,2v1h16v-1l-2,-2z"/>
         </vector>
         EOF
+
+        # Create simple launcher icons (using notification bell design)
+        for density in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+          cp app/src/main/res/drawable/ic_notification.xml app/src/main/res/mipmap-${density}/ic_launcher.xml
+        done
 
         # Create AndroidManifest.xml
         cat > app/src/main/AndroidManifest.xml <<'EOF'
@@ -248,7 +388,7 @@ jobs:
                 android:allowBackup="true"
                 android:dataExtractionRules="@xml/data_extraction_rules"
                 android:fullBackupContent="@xml/backup_rules"
-                android:icon="@mipmap/ic_launcher"
+                android:icon="@drawable/ic_notification"
                 android:label="@string/app_name"
                 android:supportsRtl="true"
                 android:theme="@style/Theme.AppCompat.Light.DarkActionBar"
@@ -277,7 +417,6 @@ jobs:
         EOF
 
         # Create backup rules
-        mkdir -p app/src/main/res/xml
         cat > app/src/main/res/xml/backup_rules.xml <<'EOF'
         <?xml version="1.0" encoding="utf-8"?>
         <full-backup-content>
@@ -294,7 +433,7 @@ jobs:
         </data-extraction-rules>
         EOF
 
-        # Create MainActivity.java with proper error handling and modern practices
+        # Create MainActivity.java
         cat > app/src/main/java/com/example/notificationlogger/MainActivity.java <<'EOF'
         package com.example.notificationlogger;
 
@@ -377,7 +516,7 @@ jobs:
             private boolean isNotificationServiceEnabled() {
                 String pkgName = getPackageName();
                 final String flat = Settings.Secure.getString(getContentResolver(), "enabled_notification_listeners");
-                if (!flat.isEmpty()) {
+                if (flat != null && !flat.isEmpty()) {
                     final String[] names = flat.split(":");
                     for (String name : names) {
                         if (name.contains(pkgName)) {
@@ -527,7 +666,7 @@ jobs:
             public void onNotificationPosted(StatusBarNotification sbn) {
                 try {
                     Notification notification = sbn.getNotification();
-                            if (notification == null) return;
+                    if (notification == null) return;
 
                     String packageName = sbn.getPackageName();
                     String title = "";
@@ -636,45 +775,6 @@ jobs:
             }
         }
         EOF
-
-    - name: Create app icons
-      run: |
-        # Create a simple notification bell icon using ImageMagick (if available) or use default
-        # For GitHub Actions, we'll create a simple colored square as placeholder
-        
-        # Create different density icons
-        declare -A sizes=( 
-          ["mipmap-mdpi"]=48
-          ["mipmap-hdpi"]=72
-          ["mipmap-xhdpi"]=96
-          ["mipmap-xxhdpi"]=144
-          ["mipmap-xxxhdpi"]=192
-        )
-        
-        for dir in "${!sizes[@]}"; do
-          size=${sizes[$dir]}
-          # Create a simple notification-style icon using a colored rectangle
-          # This is a fallback - in production you'd want proper icon files
-          echo "Creating ${size}x${size} icon for ${dir}"
-        done
-        
-        # For now, we'll use the Android SDK default icons as placeholders
-        # In production, you should replace these with proper notification bell icons
-        echo "Using default Android icons as placeholders"
-
-    - name: Make gradlew executable
-      run: |
-        # Create gradlew script
-        cat > gradlew <<'EOF'
-        #!/usr/bin/env sh
-        APP_NAME="Gradle"
-        APP_BASE_NAME=`basename "$0"`
-        DEFAULT_JVM_OPTS='"-Xmx64m" "-Xms64m"'
-        GRADLE_OPTS=""
-        JAVA_OPTS=""
-        exec java $DEFAULT_JVM_OPTS $JAVA_OPTS $GRADLE_OPTS "-Dorg.gradle.appname=$APP_BASE_NAME" -classpath "$GRADLE_HOME/lib/gradle-launcher-8.2.jar" org.gradle.launcher.GradleMain "$@"
-        EOF
-        chmod +x gradlew
 
     - name: Build with Gradle
       run: |
