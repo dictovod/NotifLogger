@@ -19,11 +19,9 @@ import java.util.List;
 public class LogsAdapter extends RecyclerView.Adapter<LogsAdapter.LogViewHolder> {
     
     private final List<LogsActivity.LogEntry> logEntries;
-    private final PackageManager packageManager; // Для загрузки иконок приложений
 
     public LogsAdapter(List<LogsActivity.LogEntry> logEntries) {
-        this.logEntries = logEntries;
-        this.packageManager = logEntries.isEmpty() ? null : logEntries.get(0).itemView.getContext().getPackageManager();
+        this.logEntries = logEntries != null ? logEntries : new ArrayList<>();
     }
 
     @NonNull
@@ -52,6 +50,7 @@ public class LogsAdapter extends RecyclerView.Adapter<LogsAdapter.LogViewHolder>
         private final TextView timeView;
         private final TextView actionView;
         private final View ongoingIndicator;
+        private final PackageManager packageManager; // Инициализируем для каждого ViewHolder
 
         public LogViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -62,6 +61,7 @@ public class LogsAdapter extends RecyclerView.Adapter<LogsAdapter.LogViewHolder>
             timeView = itemView.findViewById(R.id.tv_time);
             actionView = itemView.findViewById(R.id.tv_action);
             ongoingIndicator = itemView.findViewById(R.id.indicator_ongoing);
+            packageManager = itemView.getContext().getPackageManager(); // Инициализация здесь
         }
 
         public void bind(LogsActivity.LogEntry entry) {
