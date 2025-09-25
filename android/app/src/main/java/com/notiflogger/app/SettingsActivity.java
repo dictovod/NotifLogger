@@ -198,32 +198,37 @@ public class SettingsActivity extends AppCompatActivity {
     private void createDebugButton() {
         try {
             // Находим родительский контейнер с кнопкой активации
-            View activateButtonParent = findViewById(R.id.btn_activate).getParent().getParent();
-            if (activateButtonParent instanceof LinearLayout) {
-                LinearLayout container = (LinearLayout) activateButtonParent;
-                
-                // Создаем кнопку отладки
-                debugButton = new Button(this);
-                debugButton.setText("🔍 Отладить токен");
-                debugButton.setTextSize(14);
-                debugButton.setBackgroundColor(getColor(android.R.color.holo_orange_light));
-                debugButton.setTextColor(getColor(android.R.color.white));
-                debugButton.setPadding(32, 24, 32, 24);
-                
-                // Параметры размещения
-                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                );
-                params.topMargin = 16;
-                debugButton.setLayoutParams(params);
-                
-                // Добавляем кнопку в контейнер после кнопки активации
-                container.addView(debugButton);
-                
-                android.util.Log.d("SettingsActivity", "Кнопка отладки успешно создана");
+            ViewParent parent = findViewById(R.id.btn_activate).getParent();
+            if (parent instanceof View) {
+                ViewParent grandParent = ((View) parent).getParent();
+                if (grandParent instanceof LinearLayout) {
+                    LinearLayout container = (LinearLayout) grandParent;
+                    
+                    // Создаем кнопку отладки
+                    debugButton = new Button(this);
+                    debugButton.setText("🔍 Отладить токен");
+                    debugButton.setTextSize(14);
+                    debugButton.setBackgroundColor(getColor(android.R.color.holo_orange_light));
+                    debugButton.setTextColor(getColor(android.R.color.white));
+                    debugButton.setPadding(32, 24, 32, 24);
+                    
+                    // Параметры размещения
+                    LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    );
+                    params.topMargin = 16;
+                    debugButton.setLayoutParams(params);
+                    
+                    // Добавляем кнопку в контейнер после кнопки активации
+                    container.addView(debugButton);
+                    
+                    android.util.Log.d("SettingsActivity", "Кнопка отладки успешно создана");
+                } else {
+                    android.util.Log.e("SettingsActivity", "Родительский контейнер не является LinearLayout");
+                }
             } else {
-                android.util.Log.e("SettingsActivity", "Не удалось найти контейнер для кнопки отладки");
+                android.util.Log.e("SettingsActivity", "Родитель btn_activate не является View");
             }
         } catch (Exception e) {
             android.util.Log.e("SettingsActivity", "Ошибка при создании кнопки отладки: " + e.getMessage());

@@ -3,6 +3,7 @@ package com.notiflogger.app;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Base64;
+import android.util.Log;
 
 import org.json.JSONObject;
 
@@ -24,6 +25,7 @@ public class ActivationManager {
     private static final String KEY_EXPIRATION_TIME = "expiration_time";
     private static final String KEY_DEVICE_IMEI = "device_imei";
     private static final String KEY_TOKEN_UUID = "token_uuid";
+    private static final String TAG = "ActivationManager";
     
     private final SharedPreferences preferences;
     private final Context context;
@@ -39,19 +41,27 @@ public class ActivationManager {
     public void activate(String uuid, String startDate, int durationSeconds) {
         try {
             Date startDateParsed = parseISODate(startDate);
-            if (startDateParsed == null) return;
+            if (startDateParsed == null) {
+                Log.e(TAG, "Не удалось распарсить дату начала: " + startDate);
+                return;
+            }
 
             Date currentDate = new Date();
-            Date expirationDate = new Date(startDateParsed.getTime() + (durationSeconds * 1000));
+            Date expirationDate = new Date(startDateParsed.getTime() + (durationSeconds * 1000L));
 
             if (currentDate.before(startDateParsed) || currentDate.after(expirationDate)) {
-                return; // Не активируем, если дата вне диапазона
+                Log.w(TAG, "Дата вне диапазона: текущая=" + currentDate + ", начало=" + startDateParsed + ", конец=" + expirationDate);
+                return;
             }
 
             String imei = Utils.getDeviceIMEI(context);
+            if (imei == null) {
+                Log.e(TAG, "Не удалось получить IMEI устройства");
+                return;
+            }
             saveActivation(imei, uuid, currentDate.getTime(), expirationDate.getTime());
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(TAG, "Ошибка активации: " + e.getMessage(), e);
         }
     }
 
@@ -68,36 +78,57 @@ public class ActivationManager {
      */
     public boolean validateAndActivate(String imei, String token) {
         try {
+            if (imei == null) {
+                Log.e(TAG, "IMEI устройства равен null");
+                return false;
+            }
+            if (token == null || token.trim().isEmpty()) {
+                Log.e(TAG, "Токен пустой или null");
+                return false;
+            }
+
             byte[] decodedBytes = Base64.decode(token, Base64.URL_SAFE);
             String decodedJson = new String(decodedBytes);
+            Log.d(TAG, "Декодированный JSON: " + decodedJson);
             
             JSONObject tokenData = new JSONObject(decodedJson);
-            String tokenImei = tokenData.getString("imei");
-            String tokenUuid = tokenData.getString("uuid");
-            String startDateStr = tokenData.getString("start_date");
-            long durationSeconds = tokenData.getLong("duration_seconds");
+            String tokenImei = tokenData.optString("imei", null);
+            String tokenUuid = tokenData.optString("uuid", null);
+            String startDateStr = tokenData.optString("start_date", null);
+            long durationSeconds = tokenData.optLong("duration_seconds", -1);
+
+            if (tokenImei == null || tokenUuid == null || startDateStr == null || durationSeconds == -1) {
+                Log.e(TAG, "Недостаточно данных в токене: imei=" + tokenImei + ", uuid=" + tokenUuid + 
+                      ", startDate=" + startDateStr + ", duration=" + durationSeconds);
+                return false;
+            }
             
             if (!tokenImei.equals(imei)) {
+                Log.w(TAG, "IMEI не совпадают: устройство=" + imei + ", токен=" + tokenImei);
                 return false;
             }
             
             Date startDate = parseISODate(startDateStr);
             if (startDate == null) {
+                Log.e(TAG, "Не удалось распарсить дату начала: " + startDateStr);
                 return false;
             }
             
-            Date expirationDate = new Date(startDate.getTime() + (durationSeconds * 1000));
+            Date expirationDate = new Date(startDate.getTime() + (durationSeconds * 1000L));
             Date currentDate = new Date();
             
             if (currentDate.before(startDate) || currentDate.after(expirationDate)) {
+                Log.w(TAG, "Токен вне временного диапазона: текущая=" + currentDate + 
+                      ", начало=" + startDate + ", конец=" + expirationDate);
                 return false;
             }
             
             saveActivation(imei, tokenUuid, currentDate.getTime(), expirationDate.getTime());
+            Log.i(TAG, "Активация успешна: imei=" + imei + ", uuid=" + tokenUuid);
             return true;
             
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(TAG, "Ошибка валидации токена: " + e.getMessage(), e);
             return false;
         }
     }
@@ -109,6 +140,7 @@ public class ActivationManager {
         boolean activated = preferences.getBoolean(KEY_IS_ACTIVATED, false);
         
         if (activated && isActivationExpired()) {
+            Log.w(TAG, "Активация истекла, очищаем данные");
             clearActivation();
             return false;
         }
@@ -153,6 +185,7 @@ public class ActivationManager {
                 .putString(KEY_DEVICE_IMEI, "")
                 .putString(KEY_TOKEN_UUID, "")
                 .apply();
+        Log.i(TAG, "Данные активации очищены");
     }
 
     /**
@@ -166,6 +199,7 @@ public class ActivationManager {
                 .putString(KEY_DEVICE_IMEI, imei)
                 .putString(KEY_TOKEN_UUID, tokenUuid)
                 .apply();
+        Log.i(TAG, "Данные активации сохранены: imei=" + imei + ", uuid=" + tokenUuid);
     }
 
     /**
@@ -173,34 +207,28 @@ public class ActivationManager {
      * Улучшенная версия с поддержкой разных форматов времени
      */
     private Date parseISODate(String dateStr) {
-        android.util.Log.d("ActivationManager", "Парсинг даты: " + dateStr);
+        Log.d(TAG, "Парсинг даты: " + dateStr);
         
         // Список различных форматов для парсинга
         SimpleDateFormat[] formats = {
-            // Стандартный Python isoformat() с микросекундами
             new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS", Locale.US),
-            // Стандартный Python isoformat() без микросекунд
             new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US),
-            // С миллисекундами
             new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.US),
-            // С временной зоной Z
             new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US),
             new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
         };
         
         for (SimpleDateFormat format : formats) {
             try {
-                // Пробуем сначала как UTC
                 format.setTimeZone(TimeZone.getTimeZone("UTC"));
                 Date result = format.parse(dateStr);
-                android.util.Log.d("ActivationManager", "Дата успешно распарсена как UTC: " + result);
+                Log.d(TAG, "Дата успешно распарсена как UTC: " + result);
                 return result;
             } catch (ParseException e) {
-                // Пробуем как локальное время
                 try {
                     format.setTimeZone(TimeZone.getDefault());
                     Date result = format.parse(dateStr);
-                    android.util.Log.d("ActivationManager", "Дата успешно распарсена как локальное время: " + result);
+                    Log.d(TAG, "Дата успешно распарсена как локальное время: " + result);
                     return result;
                 } catch (ParseException ex) {
                     // Продолжаем со следующим форматом
@@ -208,7 +236,7 @@ public class ActivationManager {
             }
         }
         
-        android.util.Log.e("ActivationManager", "Не удалось распарсить дату: " + dateStr);
+        Log.e(TAG, "Не удалось распарсить дату: " + dateStr);
         return null;
     }
 
@@ -216,7 +244,9 @@ public class ActivationManager {
      * Получает IMEI устройства для отладки
      */
     public String getDebugDeviceImei() {
-        return Utils.getDeviceIMEI(context);
+        String imei = Utils.getDeviceIMEI(context);
+        Log.d(TAG, "Получен IMEI для отладки: " + (imei != null ? imei : "null"));
+        return imei;
     }
     
     /**
@@ -292,7 +322,7 @@ public class ActivationManager {
                 debug.append("✓ Дата начала распарсена: ").append(startDate).append("\n");
                 
                 Date currentDate = new Date();
-                Date expirationDate = new Date(startDate.getTime() + (durationSeconds * 1000));
+                Date expirationDate = new Date(startDate.getTime() + (durationSeconds * 1000L));
                 
                 debug.append("Текущее время: ").append(currentDate).append("\n");
                 debug.append("Время окончания: ").append(expirationDate).append("\n");
@@ -317,7 +347,7 @@ public class ActivationManager {
             
         } catch (Exception e) {
             debug.append("КРИТИЧЕСКАЯ ОШИБКА: ").append(e.getMessage()).append("\n");
-            e.printStackTrace();
+            Log.e(TAG, "Критическая ошибка отладки токена: " + e.getMessage(), e);
         }
         
         debug.append("=== КОНЕЦ ОТЛАДКИ ===\n");
@@ -336,7 +366,7 @@ public class ActivationManager {
         long expirationTime = getExpirationTime();
         String imei = preferences.getString(KEY_DEVICE_IMEI, "");
         
-        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd.MM.yyyy HH:mm");
+        SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault());
         
         return String.format(
             "Активировано: %s\nИстекает: %s\nIMEI: %s",
