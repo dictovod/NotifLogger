@@ -677,9 +677,17 @@ jobs:
             public void onNotificationPosted(StatusBarNotification sbn) {
                 try {
                     Notification notification = sbn.getNotification();
-                    if (notification == null) return;
+                    if (notification == null) {
+                        Log.w(TAG, "Null notification received");
+                        return;
+                    }
 
                     String packageName = sbn.getPackageName();
+                    if (packageName == null || packageName.isEmpty()) {
+                        Log.w(TAG, "Invalid package name");
+                        return;
+                    }
+
                     String title = "";
                     String text = "";
                     
@@ -694,6 +702,13 @@ jobs:
                     String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
                             .format(new Date());
 
+                    // Create table if not exists
+                    SQLiteDatabase db = dbHelper.getAppDatabase(packageName);
+                    if (db == null) {
+                        Log.e(TAG, "Failed to get database for package: " + packageName);
+                        return;
+                    }
+
                     // Check for duplicates
                     if (dbHelper.isDuplicate(packageName, title, text)) {
                         Log.d(TAG, "Duplicate notification skipped: " + packageName);
@@ -701,23 +716,26 @@ jobs:
                     }
 
                     // Save to database
-                    saveToDatabase(timestamp, packageName, title, text);
+                    boolean saved = saveToDatabase(timestamp, packageName, title, text);
                     
                     // Save to log file
                     saveToLogFile(timestamp, packageName, title, text);
                     
-                    // Update metadata
-                    dbHelper.updateMetadata(packageName, timestamp);
-                    
-                    Log.d(TAG, String.format("Notification logged: %s | %s | %s", 
-                            packageName, title, text));
+                    // Update metadata only if save was successful
+                    if (saved) {
+                        dbHelper.updateMetadata(packageName, timestamp);
+                        Log.d(TAG, String.format("Notification logged: %s | %s | %s", 
+                                packageName, title, text));
+                    } else {
+                        Log.e(TAG, "Failed to save notification to database");
+                    }
                             
                 } catch (Exception e) {
                     Log.e(TAG, "Error processing notification", e);
                 }
             }
 
-            private void saveToDatabase(String timestamp, String packageName, String title, String text) {
+            private boolean saveToDatabase(String timestamp, String packageName, String title, String text) {
                 try {
                     SQLiteDatabase db = dbHelper.getAppDatabase(packageName);
                     String tableName = packageName.replace(".", "_");
@@ -725,9 +743,11 @@ jobs:
                     values.put("timestamp", timestamp);
                     values.put("title", title);
                     values.put("text", text);
-                    db.insert(tableName, null, values);
+                    long result = db.insert(tableName, null, values);
+                    return result != -1;
                 } catch (Exception e) {
-                    Log.e(TAG, "Error saving to database", e);
+                    Log.e(TAG, "Error saving to database for package: " + packageName, e);
+                    return false;
                 }
             }
 
@@ -758,12 +778,15 @@ jobs:
         import android.content.Context;
         import android.database.Cursor;
         import android.database.sqlite.SQLiteDatabase;
+        import android.database.sqlite.SQLiteException;
         import android.database.sqlite.SQLiteOpenHelper;
         import android.os.Environment;
+        import android.util.Log;
 
         import java.io.File;
 
         public class DatabaseHelper extends SQLiteOpenHelper {
+            private static final String TAG = "DatabaseHelper";
             private static final String DATABASE_NAME = "notifications.db";
             private static final int DATABASE_VERSION = 1;
             private static final String METADATA_TABLE = "metadata";
@@ -793,67 +816,117 @@ jobs:
             private static String getDatabasePath(Context context) {
                 File dbDir = new File(context.getExternalFilesDir(null), "databases");
                 if (!dbDir.exists()) {
-                    dbDir.mkdirs();
+                    if (!dbDir.mkdirs()) {
+                        Log.e(TAG, "Failed to create database directory: " + dbDir.getAbsolutePath());
+                    }
                 }
-                return new File(dbDir, DATABASE_NAME).getAbsolutePath();
+                String path = new File(dbDir, DATABASE_NAME).getAbsolutePath();
+                Log.d(TAG, "Database path: " + path);
+                return path;
             }
 
             @Override
             public void onCreate(SQLiteDatabase db) {
-                db.execSQL(CREATE_METADATA_TABLE);
+                try {
+                    db.execSQL(CREATE_METADATA_TABLE);
+                    Log.d(TAG, "Metadata table created");
+                } catch (SQLiteException e) {
+                    Log.e(TAG, "Error creating metadata table", e);
+                }
             }
 
             @Override
             public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-                db.execSQL("DROP TABLE IF EXISTS " + METADATA_TABLE);
-                Cursor cursor = db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name != 'android_metadata' AND name != ?",
-                        new String[]{METADATA_TABLE});
-                while (cursor.moveToNext()) {
-                    db.execSQL("DROP TABLE IF EXISTS " + cursor.getString(0));
+                try {
+                    db.execSQL("DROP TABLE IF EXISTS " + METADATA_TABLE);
+                    Cursor cursor = db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name != 'android_metadata' AND name != ?",
+                            new String[]{METADATA_TABLE});
+                    while (cursor.moveToNext()) {
+                        db.execSQL("DROP TABLE IF EXISTS " + cursor.getString(0));
+                    }
+                    cursor.close();
+                    onCreate(db);
+                    Log.d(TAG, "Database upgraded, all tables dropped and recreated");
+                } catch (SQLiteException e) {
+                    Log.e(TAG, "Error upgrading database", e);
                 }
-                cursor.close();
-                onCreate(db);
             }
 
             public SQLiteDatabase getAppDatabase(String packageName) {
+                if (packageName == null || packageName.isEmpty()) {
+                    Log.e(TAG, "Invalid package name");
+                    return null;
+                }
                 String tableName = packageName.replace(".", "_");
-                SQLiteDatabase db = getWritableDatabase();
-                String createTableQuery =
-                        "CREATE TABLE IF NOT EXISTS " + tableName + " (" +
-                                COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                                COLUMN_TIMESTAMP + " TEXT NOT NULL, " +
-                                COLUMN_TITLE + " TEXT, " +
-                                COLUMN_TEXT + " TEXT)";
-                db.execSQL(createTableQuery);
-                return db;
+                if (!isValidTableName(tableName)) {
+                    Log.e(TAG, "Invalid table name: " + tableName);
+                    return null;
+                }
+                try {
+                    SQLiteDatabase db = getWritableDatabase();
+                    String createTableQuery =
+                            "CREATE TABLE IF NOT EXISTS " + tableName + " (" +
+                                    COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                                    COLUMN_TIMESTAMP + " TEXT NOT NULL, " +
+                                    COLUMN_TITLE + " TEXT, " +
+                                    COLUMN_TEXT + " TEXT)";
+                    db.execSQL(createTableQuery);
+                    Log.d(TAG, "Table created or already exists: " + tableName);
+                    return db;
+                } catch (SQLiteException e) {
+                    Log.e(TAG, "Error creating table for package: " + packageName, e);
+                    return null;
+                }
+            }
+
+            private boolean isValidTableName(String tableName) {
+                return tableName.matches("^[a-zA-Z0-9_]+$");
             }
 
             public boolean isDuplicate(String packageName, String title, String text) {
+                if (packageName == null || packageName.isEmpty()) {
+                    Log.e(TAG, "Invalid package name for duplicate check");
+                    return false;
+                }
                 String tableName = packageName.replace(".", "_");
-                SQLiteDatabase db = getReadableDatabase();
-                String query = "SELECT " + COLUMN_TITLE + ", " + COLUMN_TEXT + " FROM " + tableName +
-                        " WHERE " + COLUMN_TITLE + " = ? AND " + COLUMN_TEXT + " = ? " +
-                        " ORDER BY " + COLUMN_TIMESTAMP + " DESC LIMIT 1";
-                Cursor cursor = db.rawQuery(query, new String[]{title, text});
-                boolean isDuplicate = cursor.moveToFirst();
-                cursor.close();
-                return isDuplicate;
+                try {
+                    SQLiteDatabase db = getReadableDatabase();
+                    String query = "SELECT " + COLUMN_TITLE + ", " + COLUMN_TEXT + " FROM " + tableName +
+                            " WHERE " + COLUMN_TITLE + " = ? AND " + COLUMN_TEXT + " = ? " +
+                            " ORDER BY " + COLUMN_TIMESTAMP + " DESC LIMIT 1";
+                    Cursor cursor = db.rawQuery(query, new String[]{title, text});
+                    boolean isDuplicate = cursor.moveToFirst();
+                    cursor.close();
+                    return isDuplicate;
+                } catch (SQLiteException e) {
+                    Log.e(TAG, "Error checking duplicates for table: " + tableName, e);
+                    return false; // Assume not a duplicate if table doesn't exist
+                }
             }
 
             public void updateMetadata(String packageName, String timestamp) {
-                String tableName = packageName.replace(".", "_");
-                SQLiteDatabase db = getWritableDatabase();
-                Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + tableName, null);
-                int rowCount = 0;
-                if (cursor.moveToFirst()) {
-                    rowCount = cursor.getInt(0);
+                if (packageName == null || packageName.isEmpty()) {
+                    Log.e(TAG, "Invalid package name for metadata update");
+                    return;
                 }
-                cursor.close();
+                String tableName = packageName.replace(".", "_");
+                try {
+                    SQLiteDatabase db = getWritableDatabase();
+                    Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + tableName, null);
+                    int rowCount = 0;
+                    if (cursor.moveToFirst()) {
+                        rowCount = cursor.getInt(0);
+                    }
+                    cursor.close();
 
-                db.execSQL("INSERT OR REPLACE INTO " + METADATA_TABLE + " (" +
-                                COLUMN_TIMESTAMP + ", " + COLUMN_PACKAGE + ", " + COLUMN_DB_NAME + ", " + COLUMN_ROW_COUNT + ") " +
-                                "VALUES (?, ?, ?, ?)",
-                        new Object[]{timestamp, packageName, tableName, rowCount});
+                    db.execSQL("INSERT OR REPLACE INTO " + METADATA_TABLE + " (" +
+                                    COLUMN_TIMESTAMP + ", " + COLUMN_PACKAGE + ", " + COLUMN_DB_NAME + ", " + COLUMN_ROW_COUNT + ") " +
+                                    "VALUES (?, ?, ?, ?)",
+                            new Object[]{timestamp, packageName, tableName, rowCount});
+                    Log.d(TAG, "Metadata updated for package: " + packageName + ", rows: " + rowCount);
+                } catch (SQLiteException e) {
+                    Log.e(TAG, "Error updating metadata for package: " + packageName, e);
+                }
             }
         }
         EOF
