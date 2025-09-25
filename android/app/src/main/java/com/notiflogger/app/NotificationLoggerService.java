@@ -9,10 +9,8 @@ import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 import android.util.Base64;
 import android.util.Log;
-
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -20,12 +18,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-/**
- * Сервис для перехвата и логирования системных уведомлений
- * Работает только при активированном приложении
- */
 public class NotificationLoggerService extends NotificationListenerService {
-    
     private static final String TAG = "NotifLoggerService";
     private ActivationManager activationManager;
     private File logFile;
@@ -34,25 +27,16 @@ public class NotificationLoggerService extends NotificationListenerService {
     @Override
     public void onCreate() {
         super.onCreate();
-        
         activationManager = new ActivationManager(this);
         dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-        
-        // Создаем файл для логов
         createLogFile();
-        
-        // Проверяем и устанавливаем токен активации
         checkActivationToken();
-        
         Log.d(TAG, "NotificationLoggerService created");
     }
 
     @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
-        if (!activationManager.isActivated()) {
-            return;
-        }
-        
+        if (!activationManager.isActivated()) return;
         try {
             logNotification(sbn, "POSTED");
         } catch (Exception e) {
@@ -62,10 +46,7 @@ public class NotificationLoggerService extends NotificationListenerService {
 
     @Override
     public void onNotificationRemoved(StatusBarNotification sbn) {
-        if (!activationManager.isActivated()) {
-            return;
-        }
-        
+        if (!activationManager.isActivated()) return;
         try {
             logNotification(sbn, "REMOVED");
         } catch (Exception e) {
@@ -73,14 +54,10 @@ public class NotificationLoggerService extends NotificationListenerService {
         }
     }
 
-    /**
-     * Логирует уведомление в JSON формате
-     */
     private void logNotification(StatusBarNotification sbn, String action) {
         try {
             Notification notification = sbn.getNotification();
             String packageName = sbn.getPackageName();
-            
             JSONObject logEntry = new JSONObject();
             logEntry.put("timestamp", dateFormat.format(new Date()));
             logEntry.put("action", action);
@@ -90,7 +67,6 @@ public class NotificationLoggerService extends NotificationListenerService {
             logEntry.put("id", sbn.getId());
             logEntry.put("tag", sbn.getTag() != null ? sbn.getTag() : "");
             logEntry.put("key", sbn.getKey());
-            
             if (notification != null) {
                 logEntry.put("ticker", getNotificationText(notification.tickerText));
                 if (notification.extras != null) {
@@ -107,18 +83,13 @@ public class NotificationLoggerService extends NotificationListenerService {
                 logEntry.put("auto_cancel", (notification.flags & Notification.FLAG_AUTO_CANCEL) != 0);
             }
             logEntry.put("user_id", sbn.getUserId());
-            
             writeLogEntry(logEntry.toString());
             Log.d(TAG, "Logged notification: " + packageName + " - " + action);
-            
         } catch (JSONException e) {
             Log.e(TAG, "Error creating JSON log entry", e);
         }
     }
 
-    /**
-     * Получает название приложения по имени пакета
-     */
     private String getAppName(String packageName) {
         try {
             PackageManager pm = getPackageManager();
@@ -129,27 +100,16 @@ public class NotificationLoggerService extends NotificationListenerService {
         }
     }
 
-    /**
-     * Безопасно извлекает текст из CharSequence
-     */
     private String getNotificationText(CharSequence text) {
         return text != null ? text.toString() : "";
     }
 
-    /**
-     * Создает файл для логов
-     */
     private void createLogFile() {
         try {
             File logDir = new File(getExternalFilesDir(null), "notification_logs");
-            if (!logDir.exists()) {
-                logDir.mkdirs();
-            }
-            
-            String fileName = "notifications_" + 
-                new SimpleDateFormat("yyyy_MM_dd", Locale.getDefault()).format(new Date()) + ".json";
+            if (!logDir.exists()) logDir.mkdirs();
+            String fileName = "notifications_" + new SimpleDateFormat("yyyy_MM_dd", Locale.getDefault()).format(new Date()) + ".json";
             logFile = new File(logDir, fileName);
-            
             if (!logFile.exists()) {
                 logFile.createNewFile();
                 JSONObject header = new JSONObject();
@@ -165,9 +125,6 @@ public class NotificationLoggerService extends NotificationListenerService {
         }
     }
 
-    /**
-     * Записывает запись в лог файл
-     */
     private synchronized void writeLogEntry(String entry) {
         try {
             if (logFile != null && logFile.exists()) {
@@ -200,43 +157,26 @@ public class NotificationLoggerService extends NotificationListenerService {
         Log.d(TAG, "NotificationLoggerService destroyed");
     }
 
-    /**
-     * Получает статистику логирования
-     */
     public String getLoggingStats() {
         if (logFile == null || !logFile.exists()) {
             return "Лог файл не найден";
         }
         long fileSize = logFile.length();
         String lastModified = dateFormat.format(new Date(logFile.lastModified()));
-        return String.format(
-            "Файл лога: %s\nРазмер: %s\nОбновлен: %s",
-            logFile.getName(),
-            Utils.formatFileSize(fileSize),
-            lastModified
-        );
+        return String.format("Файл лога: %s\nРазмер: %s\nОбновлен: %s", logFile.getName(), Utils.formatFileSize(fileSize), lastModified);
     }
 
-    /**
-     * Проверяет и устанавливает токен активации
-     */
     private void checkActivationToken() {
-        // Предполагаем, что токен хранится в SharedPreferences
         android.content.SharedPreferences prefs = getSharedPreferences("activation", MODE_PRIVATE);
         String token = prefs.getString("activation_token", null);
-
         if (token != null && !token.isEmpty()) {
             try {
-                // Декодируем Base64
                 String decodedToken = new String(Base64.decode(token, Base64.DEFAULT));
                 JSONObject jsonToken = new JSONObject(decodedToken);
-
                 String uuid = jsonToken.getString("uuid");
                 String imei = jsonToken.getString("imei");
                 String startDate = jsonToken.getString("start_date");
                 int durationSeconds = jsonToken.getInt("duration_seconds");
-
-                // Проверяем IMEI с устройством
                 String deviceImei = new ActivationManager(this).getDeviceUniqueId();
                 if (imei.equals(deviceImei)) {
                     activationManager.activate(uuid, startDate, durationSeconds);
