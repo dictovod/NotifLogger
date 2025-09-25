@@ -9,18 +9,19 @@
     <string name="status_description_not_activated">Для активации перейдите в настройки и введите токен активации</string>
     <string name="btn_go_to_settings">Перейти в настройки</string>
     <string name="btn_activate">Перейти к активации</string>
-    <string name="device_id_label">Device ID</string> <!-- Новая строка для отображения -->
+    <string name="device_id_label">Device ID</string>
 
     <!-- Settings Activity -->
     <string name="settings_title">Настройки активации</string>
-    <string name="device_imei_title">Device ID устройства</string> <!-- Обновлено -->
-    <string name="copy_imei_description">Скопируйте Device ID и отправьте для получения токена активации</string> <!-- Обновлено -->
+    <string name="device_id_title">Device ID устройства</string> <!-- Изменено с device_imei_title -->
+    <string name="copy_device_id_description">Скопируйте Device ID и отправьте для получения токена активации</string> <!-- Изменено с copy_imei_description -->
     <string name="token_input_title">Токен активации</string>
     <string name="token_input_hint">Вставьте полученный токен активации...</string>
     <string name="btn_activate_app">Активировать приложение</string>
     <string name="activation_status_title">Статус активации</string>
     <string name="status_label">Статус:</string>
     <string name="expires_label">Истекает:</string>
+    <string name="token_creation_date_label">Дата создания токена:</string>
     <string name="about_title">О приложении</string>
     <string name="version_label">Версия:</string>
     <string name="build_label">Сборка:</string>
@@ -28,8 +29,8 @@
     <string name="build_value">2024.01.01</string>
     
     <!-- Toast Messages -->
-    <string name="device_id_copied">Device ID скопирован в буфер обмена</string> <!-- Обновлено -->
-    <string name="copy_failed">Не удалось скопировать Device ID</string> <!-- Обновлено -->
+    <string name="device_id_copied">Device ID скопирован в буфер обмена</string>
+    <string name="copy_failed">Не удалось скопировать Device ID</string>
     <string name="activation_success">Приложение успешно активировано</string>
     <string name="activation_error">Ошибка при активации</string>
     <string name="invalid_token">Неверный токен или токен не подходит для данного устройства</string>
