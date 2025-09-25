@@ -6,7 +6,11 @@ import android.util.Base64;
 
 import org.json.JSONObject;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
+import java.util.TimeZone;
 
 /**
  * Менеджер активации приложения
@@ -150,19 +154,21 @@ public class ActivationManager {
      */
     private Date parseISODate(String dateStr) {
         try {
-            // Простой парсинг ISO даты (можно улучшить для полной совместимости)
-            // Формат: 2024-01-01T12:00:00.000000
-            String cleanDateStr = dateStr.replace("T", " ");
-            if (cleanDateStr.contains(".")) {
-                cleanDateStr = cleanDateStr.substring(0, cleanDateStr.indexOf("."));
-            }
-            
-            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            return sdf.parse(cleanDateStr);
-            
-        } catch (Exception e) {
+            // Поддержка полного формата ISO 8601 (например, "2025-09-25T10:29:03.477360")
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS", Locale.US);
+            sdf.setTimeZone(TimeZone.getTimeZone("UTC")); // Учитываем UTC, как в примере
+            return sdf.parse(dateStr);
+        } catch (ParseException e) {
             e.printStackTrace();
-            return null;
+            // Попытка парсинга без микросекунд как запасной вариант
+            try {
+                SimpleDateFormat sdfFallback = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US);
+                sdfFallback.setTimeZone(TimeZone.getTimeZone("UTC"));
+                return sdfFallback.parse(dateStr);
+            } catch (ParseException ex) {
+                ex.printStackTrace();
+                return null;
+            }
         }
     }
 

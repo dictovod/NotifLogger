@@ -125,7 +125,6 @@ public class SettingsActivity extends AppCompatActivity {
         
         String token = tokenEditText.getText().toString().trim();
         
-        // Валидация токена
         if (TextUtils.isEmpty(token)) {
             showError(getString(R.string.token_required));
             return;
@@ -136,7 +135,10 @@ public class SettingsActivity extends AppCompatActivity {
             return;
         }
         
-        // Показываем процесс загрузки
+        // Сохраняем токен перед валидацией
+        android.content.SharedPreferences prefs = getSharedPreferences("activation", MODE_PRIVATE);
+        prefs.edit().putString("activation_token", token).apply();
+        
         activateButton.setText(R.string.validating);
         activateButton.setEnabled(false);
         
@@ -149,10 +151,7 @@ public class SettingsActivity extends AppCompatActivity {
                     Utils.showToast(this, getString(R.string.activation_success));
                     tokenEditText.setText(""); // Очищаем поле токена
                     updateUI();
-                    
-                    // Показываем диалог успеха (опционально)
                     showSuccessDialog();
-                    
                 } else {
                     showError(getString(R.string.invalid_token));
                     activateButton.setText(R.string.btn_activate_app);
@@ -172,7 +171,6 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void showSuccessDialog() {
-        // Создаем и показываем диалог успешной активации
         androidx.appcompat.app.AlertDialog.Builder builder = 
             new androidx.appcompat.app.AlertDialog.Builder(this);
         
