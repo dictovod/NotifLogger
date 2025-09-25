@@ -152,7 +152,7 @@ public class SettingsActivity extends AppCompatActivity {
         
         // Выполняем активацию в фоновом потоке
         new Thread(() -> {
-            boolean success = activationManager.validateAndActivate(deviceId, token); // Используем deviceId
+            boolean success = activationManager.validateAndActivate(token); // Используем только токен
             
             runOnUiThread(() -> {
                 if (success) {

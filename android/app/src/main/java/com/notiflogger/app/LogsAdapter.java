@@ -11,6 +11,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.ArrayList; // Добавлен импорт ArrayList
 import java.util.List;
 
 /**
@@ -21,7 +22,7 @@ public class LogsAdapter extends RecyclerView.Adapter<LogsAdapter.LogViewHolder>
     private final List<LogsActivity.LogEntry> logEntries;
 
     public LogsAdapter(List<LogsActivity.LogEntry> logEntries) {
-        this.logEntries = logEntries != null ? logEntries : new ArrayList<>();
+        this.logEntries = logEntries != null ? logEntries : new ArrayList<>(); // Используем ArrayList
     }
 
     @NonNull

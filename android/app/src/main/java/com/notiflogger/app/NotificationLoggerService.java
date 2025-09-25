@@ -237,7 +237,7 @@ public class NotificationLoggerService extends NotificationListenerService {
                 int durationSeconds = jsonToken.getInt("duration_seconds");
 
                 // Проверяем IMEI с устройством
-                String deviceImei = Utils.getDeviceIMEI(this);
+                String deviceImei = new ActivationManager(this).getDeviceUniqueId();
                 if (imei.equals(deviceImei)) {
                     activationManager.activate(uuid, startDate, durationSeconds);
                 } else {

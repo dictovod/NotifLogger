@@ -139,7 +139,7 @@ public class PermissionsActivity extends AppCompatActivity {
 
     private void updatePhoneInfo() {
         // Теперь это информационное поле, так как READ_PHONE_STATE не требуется
-        phoneIcon.setImageResource(R.drawable.ic_info);
+        phoneIcon.setImageResource(android.R.drawable.ic_dialog_info); // Временный fallback
         phoneIcon.setColorFilter(getColor(R.color.text_secondary));
         phoneStatus.setText("Не требуется");
         phoneStatus.setTextColor(getColor(R.color.text_secondary));
