@@ -277,6 +277,13 @@ jobs:
             <string name="about_text">Notification Logger v1.0\nПриложение для логирования уведомлений</string>
             <string name="permissions_granted">Все разрешения предоставлены</string>
             <string name="permissions_required">Пожалуйста, предоставьте разрешения</string>
+            <string name="tab_activation">Активация</string>
+            <string name="your_imei">Ваш IMEI:</string>
+            <string name="copy_imei">Копировать IMEI</string>
+            <string name="enter_token">Введите токен:</string>
+            <string name="activate">Активировать</string>
+            <string name="activation_success">Активация успешна</string>
+            <string name="activation_failed">Активация провалена</string>
         </resources>
         EOF
 
@@ -306,8 +313,36 @@ jobs:
         </menu>
         EOF
 
-        # Create activity_main.xml layout
+        # Create activity_main.xml (with TabLayout and ViewPager for tabs)
         cat > app/src/main/res/layout/activity_main.xml <<'EOF'
+        <?xml version="1.0" encoding="utf-8"?>
+        <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <com.google.android.material.appbar.AppBarLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <com.google.android.material.tabs.TabLayout
+                    android:id="@+id/tab_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:tabMode="fixed" />
+            </com.google.android.material.appbar.AppBarLayout>
+
+            <androidx.viewpager.widget.ViewPager
+                android:id="@+id/view_pager"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+
+        </androidx.coordinatorlayout.widget.CoordinatorLayout>
+        EOF
+
+        # Create layout_permissions.xml for permissions tab
+        cat > app/src/main/res/layout/layout_permissions.xml <<'EOF'
         <?xml version="1.0" encoding="utf-8"?>
         <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
             android:layout_width="match_parent"
@@ -317,9 +352,10 @@ jobs:
             android:gravity="center">
 
             <ImageView
+                android:id="@+id/iv_icon"
                 android:layout_width="120dp"
                 android:layout_height="120dp"
-                android:src="@drawable/ic_notification"
+                android:src="@drawable/ic_notification_bw"
                 android:layout_marginBottom="32dp" />
 
             <TextView
@@ -361,8 +397,76 @@ jobs:
         </LinearLayout>
         EOF
 
-        # Create custom notification icon
-        cat > app/src/main/res/drawable/ic_notification.xml <<'EOF'
+        # Create layout_activation.xml for activation tab
+        cat > app/src/main/res/layout/layout_activation.xml <<'EOF'
+        <?xml version="1.0" encoding="utf-8"?>
+        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/tv_imei_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/your_imei"
+                android:textSize="18sp"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:id="@+id/tv_imei"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:layout_marginBottom="16dp" />
+
+            <Button
+                android:id="@+id/btn_copy_imei"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/copy_imei"
+                android:backgroundTint="@color/purple_500"
+                android:textColor="@color/white"
+                android:layout_marginBottom="32dp" />
+
+            <EditText
+                android:id="@+id/et_token"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/enter_token"
+                android:inputType="textMultiLine"
+                android:minLines="3"
+                android:layout_marginBottom="16dp" />
+
+            <Button
+                android:id="@+id/btn_activate"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/activate"
+                android:backgroundTint="@color/purple_500"
+                android:textColor="@color/white" />
+
+        </LinearLayout>
+        EOF
+
+        # Create custom notification icon BW (black and white)
+        cat > app/src/main/res/drawable/ic_notification_bw.xml <<'EOF'
+        <vector xmlns:android="http://schemas.android.com/apk/res/android"
+            android:width="24dp"
+            android:height="24dp"
+            android:viewportWidth="24"
+            android:viewportHeight="24"
+            android:tint="@color/black">
+            <path
+                android:fillColor="#FF000000"
+                android:pathData="M12,22c1.1,0 2,-0.9 2,-2h-4c0,1.1 0.89,2 2,2zM18,16v-5c0,-3.07 -1.64,-5.64 -4.5,-6.32V4c0,-0.83 -0.67,-1.5 -1.5,-1.5s-1.5,0.67 -1.5,1.5v0.68C7.63,5.36 6,7.92 6,11v5l-2,2v1h16v-1l-2,-2z"/>
+        </vector>
+        EOF
+
+        # Create custom notification icon color
+        cat > app/src/main/res/drawable/ic_notification_color.xml <<'EOF'
         <vector xmlns:android="http://schemas.android.com/apk/res/android"
             android:width="24dp"
             android:height="24dp"
@@ -375,12 +479,12 @@ jobs:
         </vector>
         EOF
 
-        # Create simple launcher icons
+        # Create simple launcher icons (BW by default)
         for density in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
-          cp app/src/main/res/drawable/ic_notification.xml app/src/main/res/mipmap-${density}/ic_launcher.xml
+          cp app/src/main/res/drawable/ic_notification_bw.xml app/src/main/res/mipmap-${density}/ic_launcher.xml
         done
 
-        # Create AndroidManifest.xml
+        # Create AndroidManifest.xml (added READ_PHONE_STATE permission)
         cat > app/src/main/AndroidManifest.xml <<'EOF'
         <?xml version="1.0" encoding="utf-8"?>
         <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -394,12 +498,13 @@ jobs:
                 android:maxSdkVersion="28" />
             <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
                 tools:ignore="ScopedStorage" />
+            <uses-permission android:name="android.permission.READ_PHONE_STATE" />
 
             <application
                 android:allowBackup="true"
                 android:dataExtractionRules="@xml/data_extraction_rules"
                 android:fullBackupContent="@xml/backup_rules"
-                android:icon="@drawable/ic_notification"
+                android:icon="@drawable/ic_notification_bw"
                 android:label="@string/app_name"
                 android:supportsRtl="true"
                 android:theme="@style/Theme.AppCompat.Light.DarkActionBar"
@@ -444,20 +549,30 @@ jobs:
         </data-extraction-rules>
         EOF
 
-        # Create MainActivity.java
+        # Create MainActivity.java (with tabs, IMEI, token validation, icon change)
         cat > app/src/main/java/com/example/notificationlogger/MainActivity.java <<'EOF'
         package com.example.notificationlogger;
 
         import android.Manifest;
+        import android.content.ClipData;
+        import android.content.ClipboardManager;
+        import android.content.Context;
         import android.content.Intent;
+        import android.content.SharedPreferences;
         import android.content.pm.PackageManager;
         import android.os.Build;
         import android.os.Bundle;
         import android.os.Environment;
         import android.provider.Settings;
+        import android.telephony.TelephonyManager;
+        import android.view.LayoutInflater;
         import android.view.Menu;
         import android.view.MenuItem;
+        import android.view.View;
+        import android.view.ViewGroup;
         import android.widget.Button;
+        import android.widget.EditText;
+        import android.widget.ImageView;
         import android.widget.TextView;
         import android.widget.Toast;
 
@@ -466,28 +581,187 @@ jobs:
         import androidx.appcompat.app.AppCompatActivity;
         import androidx.core.app.ActivityCompat;
         import androidx.core.content.ContextCompat;
+        import androidx.fragment.app.Fragment;
+        import androidx.fragment.app.FragmentManager;
+        import androidx.fragment.app.FragmentPagerAdapter;
+        import androidx.viewpager.widget.ViewPager;
+
+        import com.google.android.material.tabs.TabLayout;
+
+        import java.util.Base64;
+        import java.util.Date;
+        import org.json.JSONObject;
 
         public class MainActivity extends AppCompatActivity {
             private static final int REQUEST_CODE_NOTIFICATION_LISTENER = 1001;
             private static final int REQUEST_CODE_STORAGE = 1002;
-            
+            private static final int REQUEST_CODE_PHONE = 1003;
+
+            private ImageView ivIcon;
             private TextView tvStatus;
             private Button btnNotification, btnStorage;
+            private TextView tvImei;
+            private Button btnCopyImei;
+            private EditText etToken;
+            private Button btnActivate;
+
+            private SharedPreferences prefs;
+            private boolean isActivated = false;
 
             @Override
             protected void onCreate(Bundle savedInstanceState) {
                 super.onCreate(savedInstanceState);
                 setContentView(R.layout.activity_main);
 
-                initViews();
-                setupClickListeners();
-                updateStatus();
+                prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
+                isActivated = prefs.getBoolean("activated", false);
+
+                ViewPager viewPager = findViewById(R.id.view_pager);
+                TabLayout tabLayout = findViewById(R.id.tab_layout);
+
+                viewPager.setAdapter(new TabsAdapter(getSupportFragmentManager()));
+                tabLayout.setupWithViewPager(viewPager);
+
+                requestPhonePermission();
+                loadActivationStatus();
             }
 
-            private void initViews() {
-                tvStatus = findViewById(R.id.tv_status);
-                btnNotification = findViewById(R.id.btn_notification);
-                btnStorage = findViewById(R.id.btn_storage);
+            private void requestPhonePermission() {
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_PHONE_STATE}, REQUEST_CODE_PHONE);
+                }
+            }
+
+            private String getImei() {
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
+                    TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        return tm.getImei();
+                    } else {
+                        return tm.getDeviceId();
+                    }
+                }
+                return "Permission denied";
+            }
+
+            private void loadActivationStatus() {
+                if (isActivated) {
+                    ivIcon.setImageResource(R.drawable.ic_notification_color);
+                } else {
+                    ivIcon.setImageResource(R.drawable.ic_notification_bw);
+                }
+            }
+
+            private boolean validateToken(String token) {
+                try {
+                    byte[] decoded = Base64.getUrlDecoder().decode(token);
+                    JSONObject data = new JSONObject(new String(decoded));
+                    String tokenImei = data.getString("imei");
+                    String startDateStr = data.getString("start_date");
+                    long durationSeconds = data.getLong("duration_seconds");
+
+                    String deviceImei = getImei();
+                    if (!tokenImei.equals(deviceImei)) {
+                        return false;
+                    }
+
+                    Date startDate = java.text.DateFormat.getDateTimeInstance().parse(startDateStr);
+                    Date expiryDate = new Date(startDate.getTime() + durationSeconds * 1000);
+                    return new Date().before(expiryDate);
+                } catch (Exception e) {
+                    return false;
+                }
+            }
+
+            private void activateApp(String token) {
+                if (validateToken(token)) {
+                    prefs.edit().putBoolean("activated", true).apply();
+                    isActivated = true;
+                    loadActivationStatus();
+                    Toast.makeText(this, getString(R.string.activation_success), Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, getString(R.string.activation_failed), Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            // Tabs Adapter
+            private class TabsAdapter extends FragmentPagerAdapter {
+                public TabsAdapter(FragmentManager fm) {
+                    super(fm, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT);
+                }
+
+                @Override
+                public Fragment getItem(int position) {
+                    if (position == 0) {
+                        return new PermissionsFragment();
+                    } else {
+                        return new ActivationFragment();
+                    }
+                }
+
+                @Override
+                public int getCount() {
+                    return 2;
+                }
+
+                @Override
+                public CharSequence getPageTitle(int position) {
+                    if (position == 0) {
+                        return "Разрешения";
+                    } else {
+                        return getString(R.string.tab_activation);
+                    }
+                }
+            }
+
+            // Permissions Fragment
+            public static class PermissionsFragment extends Fragment {
+                @Override
+                public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+                    View view = inflater.inflate(R.layout.layout_permissions, container, false);
+                    ((MainActivity)getActivity()).ivIcon = view.findViewById(R.id.iv_icon);
+                    ((MainActivity)getActivity()).tvStatus = view.findViewById(R.id.tv_status);
+                    ((MainActivity)getActivity()).btnNotification = view.findViewById(R.id.btn_notification);
+                    ((MainActivity)getActivity()).btnStorage = view.findViewById(R.id.btn_storage);
+
+                    ((MainActivity)getActivity()).setupClickListeners();
+                    ((MainActivity)getActivity()).updateStatus();
+                    ((MainActivity)getActivity()).loadActivationStatus();
+
+                    return view;
+                }
+            }
+
+            // Activation Fragment
+            public static class ActivationFragment extends Fragment {
+                @Override
+                public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+                    View view = inflater.inflate(R.layout.layout_activation, container, false);
+                    ((MainActivity)getActivity()).tvImei = view.findViewById(R.id.tv_imei);
+                    ((MainActivity)getActivity()).btnCopyImei = view.findViewById(R.id.btn_copy_imei);
+                    ((MainActivity)getActivity()).etToken = view.findViewById(R.id.et_token);
+                    ((MainActivity)getActivity()).btnActivate = view.findViewById(R.id.btn_activate);
+
+                    ((MainActivity)getActivity()).tvImei.setText(((MainActivity)getActivity()).getImei());
+
+                    ((MainActivity)getActivity()).btnCopyImei.setOnClickListener(v -> {
+                        ClipboardManager clipboard = (ClipboardManager) getActivity().getSystemService(Context.CLIPBOARD_SERVICE);
+                        ClipData clip = ClipData.newPlainText("IMEI", ((MainActivity)getActivity()).tvImei.getText());
+                        clipboard.setPrimaryClip(clip);
+                        Toast.makeText(getActivity(), "IMEI скопирован", Toast.LENGTH_SHORT).show();
+                    });
+
+                    ((MainActivity)getActivity()).btnActivate.setOnClickListener(v -> {
+                        String token = ((MainActivity)getActivity()).etToken.getText().toString().trim();
+                        if (!token.isEmpty()) {
+                            ((MainActivity)getActivity()).activateApp(token);
+                        } else {
+                            Toast.makeText(getActivity(), "Введите токен", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+
+                    return view;
+                }
             }
 
             private void setupClickListeners() {
@@ -570,7 +844,7 @@ jobs:
             public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, 
                     @NonNull int[] grantResults) {
                 super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-                if (requestCode == REQUEST_CODE_STORAGE) {
+                if (requestCode == REQUEST_CODE_STORAGE || requestCode == REQUEST_CODE_PHONE) {
                     updateStatus();
                 }
             }
@@ -606,12 +880,13 @@ jobs:
         }
         EOF
 
-        # Create NotificationListener.java
+        # NotificationListener.java (add activation check before logging)
         cat > app/src/main/java/com/example/notificationlogger/NotificationListener.java <<'EOF'
         package com.example.notificationlogger;
 
         import android.app.Notification;
         import android.content.ContentValues;
+        import android.content.SharedPreferences;
         import android.database.sqlite.SQLiteDatabase;
         import android.os.Build;
         import android.os.Environment;
@@ -630,10 +905,12 @@ jobs:
             private static final String TAG = "NotificationLogger";
             private DatabaseHelper dbHelper;
             private FileWriter logFileWriter;
+            private SharedPreferences prefs;
 
             @Override
             public void onCreate() {
                 super.onCreate();
+                prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
                 dbHelper = new DatabaseHelper(this);
                 initLogFile();
                 Log.d(TAG, "NotificationListener service created");
@@ -675,19 +952,16 @@ jobs:
 
             @Override
             public void onNotificationPosted(StatusBarNotification sbn) {
+                if (!prefs.getBoolean("activated", false)) {
+                    Log.d(TAG, "App not activated, skipping notification");
+                    return;
+                }
+
                 try {
                     Notification notification = sbn.getNotification();
-                    if (notification == null) {
-                        Log.w(TAG, "Null notification received");
-                        return;
-                    }
+                    if (notification == null) return;
 
                     String packageName = sbn.getPackageName();
-                    if (packageName == null || packageName.isEmpty()) {
-                        Log.w(TAG, "Invalid package name");
-                        return;
-                    }
-
                     String title = "";
                     String text = "";
                     
@@ -702,13 +976,6 @@ jobs:
                     String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
                             .format(new Date());
 
-                    // Create table if not exists
-                    SQLiteDatabase db = dbHelper.getAppDatabase(packageName);
-                    if (db == null) {
-                        Log.e(TAG, "Failed to get database for package: " + packageName);
-                        return;
-                    }
-
                     // Check for duplicates
                     if (dbHelper.isDuplicate(packageName, title, text)) {
                         Log.d(TAG, "Duplicate notification skipped: " + packageName);
@@ -716,26 +983,23 @@ jobs:
                     }
 
                     // Save to database
-                    boolean saved = saveToDatabase(timestamp, packageName, title, text);
+                    saveToDatabase(timestamp, packageName, title, text);
                     
                     // Save to log file
                     saveToLogFile(timestamp, packageName, title, text);
                     
-                    // Update metadata only if save was successful
-                    if (saved) {
-                        dbHelper.updateMetadata(packageName, timestamp);
-                        Log.d(TAG, String.format("Notification logged: %s | %s | %s", 
-                                packageName, title, text));
-                    } else {
-                        Log.e(TAG, "Failed to save notification to database");
-                    }
+                    // Update metadata
+                    dbHelper.updateMetadata(packageName, timestamp);
+                    
+                    Log.d(TAG, String.format("Notification logged: %s | %s | %s", 
+                            packageName, title, text));
                             
                 } catch (Exception e) {
                     Log.e(TAG, "Error processing notification", e);
                 }
             }
 
-            private boolean saveToDatabase(String timestamp, String packageName, String title, String text) {
+            private void saveToDatabase(String timestamp, String packageName, String title, String text) {
                 try {
                     SQLiteDatabase db = dbHelper.getAppDatabase(packageName);
                     String tableName = packageName.replace(".", "_");
@@ -743,11 +1007,9 @@ jobs:
                     values.put("timestamp", timestamp);
                     values.put("title", title);
                     values.put("text", text);
-                    long result = db.insert(tableName, null, values);
-                    return result != -1;
+                    db.insert(tableName, null, values);
                 } catch (Exception e) {
-                    Log.e(TAG, "Error saving to database for package: " + packageName, e);
-                    return false;
+                    Log.e(TAG, "Error saving to database", e);
                 }
             }
 
@@ -771,22 +1033,19 @@ jobs:
         }
         EOF
 
-        # Create DatabaseHelper.java
+        # DatabaseHelper.java remains the same as previous
         cat > app/src/main/java/com/example/notificationlogger/DatabaseHelper.java <<'EOF'
         package com.example.notificationlogger;
 
         import android.content.Context;
         import android.database.Cursor;
         import android.database.sqlite.SQLiteDatabase;
-        import android.database.sqlite.SQLiteException;
         import android.database.sqlite.SQLiteOpenHelper;
         import android.os.Environment;
-        import android.util.Log;
 
         import java.io.File;
 
         public class DatabaseHelper extends SQLiteOpenHelper {
-            private static final String TAG = "DatabaseHelper";
             private static final String DATABASE_NAME = "notifications.db";
             private static final int DATABASE_VERSION = 1;
             private static final String METADATA_TABLE = "metadata";
@@ -816,117 +1075,67 @@ jobs:
             private static String getDatabasePath(Context context) {
                 File dbDir = new File(context.getExternalFilesDir(null), "databases");
                 if (!dbDir.exists()) {
-                    if (!dbDir.mkdirs()) {
-                        Log.e(TAG, "Failed to create database directory: " + dbDir.getAbsolutePath());
-                    }
+                    dbDir.mkdirs();
                 }
-                String path = new File(dbDir, DATABASE_NAME).getAbsolutePath();
-                Log.d(TAG, "Database path: " + path);
-                return path;
+                return new File(dbDir, DATABASE_NAME).getAbsolutePath();
             }
 
             @Override
             public void onCreate(SQLiteDatabase db) {
-                try {
-                    db.execSQL(CREATE_METADATA_TABLE);
-                    Log.d(TAG, "Metadata table created");
-                } catch (SQLiteException e) {
-                    Log.e(TAG, "Error creating metadata table", e);
-                }
+                db.execSQL(CREATE_METADATA_TABLE);
             }
 
             @Override
             public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-                try {
-                    db.execSQL("DROP TABLE IF EXISTS " + METADATA_TABLE);
-                    Cursor cursor = db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name != 'android_metadata' AND name != ?",
-                            new String[]{METADATA_TABLE});
-                    while (cursor.moveToNext()) {
-                        db.execSQL("DROP TABLE IF EXISTS " + cursor.getString(0));
-                    }
-                    cursor.close();
-                    onCreate(db);
-                    Log.d(TAG, "Database upgraded, all tables dropped and recreated");
-                } catch (SQLiteException e) {
-                    Log.e(TAG, "Error upgrading database", e);
+                db.execSQL("DROP TABLE IF EXISTS " + METADATA_TABLE);
+                Cursor cursor = db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name != 'android_metadata' AND name != ?",
+                        new String[]{METADATA_TABLE});
+                while (cursor.moveToNext()) {
+                    db.execSQL("DROP TABLE IF EXISTS " + cursor.getString(0));
                 }
+                cursor.close();
+                onCreate(db);
             }
 
             public SQLiteDatabase getAppDatabase(String packageName) {
-                if (packageName == null || packageName.isEmpty()) {
-                    Log.e(TAG, "Invalid package name");
-                    return null;
-                }
                 String tableName = packageName.replace(".", "_");
-                if (!isValidTableName(tableName)) {
-                    Log.e(TAG, "Invalid table name: " + tableName);
-                    return null;
-                }
-                try {
-                    SQLiteDatabase db = getWritableDatabase();
-                    String createTableQuery =
-                            "CREATE TABLE IF NOT EXISTS " + tableName + " (" +
-                                    COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                                    COLUMN_TIMESTAMP + " TEXT NOT NULL, " +
-                                    COLUMN_TITLE + " TEXT, " +
-                                    COLUMN_TEXT + " TEXT)";
-                    db.execSQL(createTableQuery);
-                    Log.d(TAG, "Table created or already exists: " + tableName);
-                    return db;
-                } catch (SQLiteException e) {
-                    Log.e(TAG, "Error creating table for package: " + packageName, e);
-                    return null;
-                }
-            }
-
-            private boolean isValidTableName(String tableName) {
-                return tableName.matches("^[a-zA-Z0-9_]+$");
+                SQLiteDatabase db = getWritableDatabase();
+                String createTableQuery =
+                        "CREATE TABLE IF NOT EXISTS " + tableName + " (" +
+                                COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                                COLUMN_TIMESTAMP + " TEXT NOT NULL, " +
+                                COLUMN_TITLE + " TEXT, " +
+                                COLUMN_TEXT + " TEXT)";
+                db.execSQL(createTableQuery);
+                return db;
             }
 
             public boolean isDuplicate(String packageName, String title, String text) {
-                if (packageName == null || packageName.isEmpty()) {
-                    Log.e(TAG, "Invalid package name for duplicate check");
-                    return false;
-                }
                 String tableName = packageName.replace(".", "_");
-                try {
-                    SQLiteDatabase db = getReadableDatabase();
-                    String query = "SELECT " + COLUMN_TITLE + ", " + COLUMN_TEXT + " FROM " + tableName +
-                            " WHERE " + COLUMN_TITLE + " = ? AND " + COLUMN_TEXT + " = ? " +
-                            " ORDER BY " + COLUMN_TIMESTAMP + " DESC LIMIT 1";
-                    Cursor cursor = db.rawQuery(query, new String[]{title, text});
-                    boolean isDuplicate = cursor.moveToFirst();
-                    cursor.close();
-                    return isDuplicate;
-                } catch (SQLiteException e) {
-                    Log.e(TAG, "Error checking duplicates for table: " + tableName, e);
-                    return false; // Assume not a duplicate if table doesn't exist
-                }
+                SQLiteDatabase db = getReadableDatabase();
+                String query = "SELECT " + COLUMN_TITLE + ", " + COLUMN_TEXT + " FROM " + tableName +
+                        " WHERE " + COLUMN_TITLE + " = ? AND " + COLUMN_TEXT + " = ? " +
+                        " ORDER BY " + COLUMN_TIMESTAMP + " DESC LIMIT 1";
+                Cursor cursor = db.rawQuery(query, new String[]{title, text});
+                boolean isDuplicate = cursor.moveToFirst();
+                cursor.close();
+                return isDuplicate;
             }
 
             public void updateMetadata(String packageName, String timestamp) {
-                if (packageName == null || packageName.isEmpty()) {
-                    Log.e(TAG, "Invalid package name for metadata update");
-                    return;
-                }
                 String tableName = packageName.replace(".", "_");
-                try {
-                    SQLiteDatabase db = getWritableDatabase();
-                    Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + tableName, null);
-                    int rowCount = 0;
-                    if (cursor.moveToFirst()) {
-                        rowCount = cursor.getInt(0);
-                    }
-                    cursor.close();
-
-                    db.execSQL("INSERT OR REPLACE INTO " + METADATA_TABLE + " (" +
-                                    COLUMN_TIMESTAMP + ", " + COLUMN_PACKAGE + ", " + COLUMN_DB_NAME + ", " + COLUMN_ROW_COUNT + ") " +
-                                    "VALUES (?, ?, ?, ?)",
-                            new Object[]{timestamp, packageName, tableName, rowCount});
-                    Log.d(TAG, "Metadata updated for package: " + packageName + ", rows: " + rowCount);
-                } catch (SQLiteException e) {
-                    Log.e(TAG, "Error updating metadata for package: " + packageName, e);
+                SQLiteDatabase db = getWritableDatabase();
+                Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + tableName, null);
+                int rowCount = 0;
+                if (cursor.moveToFirst()) {
+                    rowCount = cursor.getInt(0);
                 }
+                cursor.close();
+
+                db.execSQL("INSERT OR REPLACE INTO " + METADATA_TABLE + " (" +
+                                COLUMN_TIMESTAMP + ", " + COLUMN_PACKAGE + ", " + COLUMN_DB_NAME + ", " + COLUMN_ROW_COUNT + ") " +
+                                "VALUES (?, ?, ?, ?)",
+                        new Object[]{timestamp, packageName, tableName, rowCount});
             }
         }
         EOF
