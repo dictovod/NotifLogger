@@ -1,953 +1,108 @@
-name: Build NotificationLogger
+
+name: Build Android APK
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, master ]
+    paths:
+      - 'android/**'
   pull_request:
-    branches: [ main ]
+    branches: [ main, master ]
+    paths:
+      - 'android/**'
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    
     steps:
-    - name: Checkout code
+    - name: Checkout repository
       uses: actions/checkout@v4
-
+      
     - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
-
-    - name: Set up Android SDK
+        
+    - name: Setup Android SDK
       uses: android-actions/setup-android@v3
-      with:
-        cmdline-tools-version: '12266719'
-        accept-android-sdk-licenses: true
-
-    - name: Cache Gradle
+      
+    - name: Cache Gradle packages
       uses: actions/cache@v4
       with:
         path: |
           ~/.gradle/caches
           ~/.gradle/wrapper
-        key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-        restore-keys: gradle-
-
-    - name: Create project structure
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+          
+    - name: Make gradlew executable
+      run: chmod +x android/gradlew
+      
+    - name: Clean project
       run: |
-        mkdir -p app/src/main/java/com/example/notificationlogger
-        mkdir -p app/src/main/res/{layout,menu,drawable,values,xml}
-        mkdir -p app/src/main/res/mipmap-{hdpi,mdpi,xhdpi,xxhdpi,xxxhdpi}
-        mkdir -p gradle/wrapper
-
-        # Create settings.gradle
-        cat > settings.gradle <<'EOF'
-        rootProject.name = 'NotificationLogger'
-        include ':app'
-        EOF
-
-        # Create gradle.properties
-        cat > gradle.properties <<'EOF'
-        android.useAndroidX=true
-        android.enableJetifier=true
-        org.gradle.jvmargs=-Xmx2048m
-        EOF
-
-        # Create app/build.gradle
-        cat > app/build.gradle <<'EOF'
-        apply plugin: 'com.android.application'
-
-        android {
-            namespace 'com.example.notificationlogger'
-            compileSdk 34
-
-            defaultConfig {
-                applicationId "com.example.notificationlogger"
-                minSdk 24
-                targetSdk 34
-                versionCode 1
-                versionName "1.0"
-            }
-
-            buildTypes {
-                release {
-                    minifyEnabled false
-                    proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-                }
-            }
-            
-            compileOptions {
-                sourceCompatibility JavaVersion.VERSION_17
-                targetCompatibility JavaVersion.VERSION_17
-            }
-        }
-
-        dependencies {
-            implementation 'androidx.core:core:1.12.0'
-            implementation 'androidx.appcompat:appcompat:1.6.1'
-            implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-            implementation 'com.google.android.material:material:1.11.0'
-        }
-        EOF
-
-        # Create top-level build.gradle
-        cat > build.gradle <<'EOF'
-        buildscript {
-            repositories {
-                google()
-                mavenCentral()
-            }
-            dependencies {
-                classpath 'com.android.tools.build:gradle:8.2.0'
-            }
-        }
-
-        allprojects {
-            repositories {
-                google()
-                mavenCentral()
-            }
-        }
-
-        task clean(type: Delete) {
-            delete rootProject.buildDir
-        }
-        EOF
-
-        # Create gradle-wrapper.properties
-        cat > gradle/wrapper/gradle-wrapper.properties <<'EOF'
-        distributionBase=GRADLE_USER_HOME
-        distributionPath=wrapper/dists
-        distributionUrl=https\://services.gradle.org/distributions/gradle-8.2-bin.zip
-        networkTimeout=10000
-        zipStoreBase=GRADLE_USER_HOME
-        zipStorePath=wrapper/dists
-        EOF
-
-        # Create gradle-wrapper.jar (download)
-        curl -L https://github.com/gradle/gradle/raw/v8.2.0/gradle/wrapper/gradle-wrapper.jar -o gradle/wrapper/gradle-wrapper.jar
-
-        # Create gradlew script
-        cat > gradlew <<'EOF'
-        #!/bin/sh
-        APP_NAME="Gradle"
-        APP_BASE_NAME=$(basename "$0")
-        DEFAULT_JVM_OPTS='"-Xmx64m" "-Xms64m"'
-        GRADLE_OPTS=""
-        JAVA_OPTS=""
-
-        # Determine the Java command to use to start the JVM.
-        if [ -n "$JAVA_HOME" ] ; then
-            if [ -x "$JAVA_HOME/jre/sh/java" ] ; then
-                # IBM's JDK on AIX uses strange locations for the executables
-                JAVACMD="$JAVA_HOME/jre/sh/java"
-            else
-                JAVACMD="$JAVA_HOME/bin/java"
-            fi
-            if [ ! -x "$JAVACMD" ] ; then
-                die "ERROR: JAVA_HOME is set to an invalid directory: $JAVA_HOME"
-            fi
-        else
-            JAVACMD="java"
-            which java >/dev/null 2>&1 || die "ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH."
-        fi
-
-        # Escape application args
-        save () {
-            for i do printf %s\\n "$i" | sed "s/'/'\\\\''/g;1s/^/'/;\$s/\$/' \\\\/" ; done
-            echo " "
-        }
-        APP_ARGS=$(save "$@")
-
-        # Collect all arguments for the java command
-        eval set -- $DEFAULT_JVM_OPTS $JAVA_OPTS $GRADLE_OPTS "\"-Dorg.gradle.appname=$APP_BASE_NAME\"" -classpath "\"gradle/wrapper/gradle-wrapper.jar\"" org.gradle.wrapper.GradleWrapperMain "$APP_ARGS"
-
-        exec "$JAVACMD" "$@"
-        EOF
-
-        chmod +x gradlew
-
-        # Create gradlew.bat
-        cat > gradlew.bat <<'EOF'
-        @rem
-        @rem Copyright 2015 the original author or authors.
-        @rem
-        @rem Licensed under the Apache License, Version 2.0 (the "License");
-        @rem you may not use this file except in compliance with the License.
-        @rem You may obtain a copy of the License at
-        @rem
-        @rem      https://www.apache.org/licenses/LICENSE-2.0
-        @rem
-        @rem Unless required by applicable law or agreed to in writing, software
-        @rem distributed under the License is distributed on an "AS IS" BASIS,
-        @rem WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-        @rem See the License for the specific language governing permissions and
-        @rem limitations under the License.
-        @rem
-
-        @if "%DEBUG%" == "" @echo off
-        @rem ##########################################################################
-        @rem
-        @rem  Gradle startup script for Windows
-        @rem
-        @rem ##########################################################################
-
-        @rem Set local scope for the variables with windows NT shell
-        if "%OS%"=="Windows_NT" setlocal
-
-        set DIRNAME=%~dp0
-        if "%DIRNAME%" == "" set DIRNAME=.
-        set APP_BASE_NAME=%~n0
-        set APP_HOME=%DIRNAME%
-
-        @rem Resolve any "." and ".." in APP_HOME to make it shorter.
-        for %%i in ("%APP_HOME%") do set APP_HOME=%%~fi
-
-        @rem Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
-        set DEFAULT_JVM_OPTS="-Xmx64m" "-Xms64m"
-
-        @rem Find java.exe
-        if defined JAVA_HOME goto findJavaFromJavaHome
-
-        set JAVA_EXE=java.exe
-        %JAVA_EXE% -version >NUL 2>&1
-        if "%ERRORLEVEL%" == "0" goto execute
-
-        echo.
-        echo ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH.
-        echo.
-        echo Please set the JAVA_HOME variable in your environment to match the
-        echo location of your Java installation.
-
-        goto fail
-
-        :findJavaFromJavaHome
-        set JAVA_HOME=%JAVA_HOME:"=%
-        set JAVA_EXE=%JAVA_HOME%/bin/java.exe
-
-        if exist "%JAVA_EXE%" goto execute
-
-        echo.
-        echo ERROR: JAVA_HOME is set to an invalid directory: %JAVA_HOME%
-        echo.
-        echo Please set the JAVA_HOME variable in your environment to match the
-        echo location of your Java installation.
-
-        goto fail
-
-        :execute
-        @rem Setup the command line
-
-        set CLASSPATH=%APP_HOME%\gradle\wrapper\gradle-wrapper.jar
-
-
-        @rem Execute Gradle
-        "%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% %GRADLE_OPTS% "-Dorg.gradle.appname=%APP_BASE_NAME%" -classpath "%CLASSPATH%" org.gradle.wrapper.GradleWrapperMain %*
-
-        :end
-        @rem End local scope for the variables with windows NT shell
-        if "%ERRORLEVEL%"=="0" goto mainEnd
-
-        :fail
-        rem Set variable GRADLE_EXIT_CONSOLE if you need the _script_ return code instead of
-        rem the _cmd_ return code when the batch file is called from another batch file.
-        if not "" == "%GRADLE_EXIT_CONSOLE%" exit 1
-        exit /b 1
-
-        :mainEnd
-        if "%OS%"=="Windows_NT" endlocal
-
-        :omega
-        EOF
-
-        # Create proguard-rules.pro
-        touch app/proguard-rules.pro
-
-        # Create strings.xml
-        cat > app/src/main/res/values/strings.xml <<'EOF'
-        <?xml version="1.0" encoding="utf-8"?>
-        <resources>
-            <string name="app_name">Notification Logger</string>
-            <string name="permission_notification">Предоставить доступ к уведомлениям</string>
-            <string name="permission_storage">Предоставить доступ к хранилищу</string>
-            <string name="menu_about">О программе</string>
-            <string name="menu_exit">Выход</string>
-            <string name="about_text">Notification Logger v1.0\nПриложение для логирования уведомлений</string>
-            <string name="permissions_granted">Все разрешения предоставлены</string>
-            <string name="permissions_required">Пожалуйста, предоставьте разрешения</string>
-        </resources>
-        EOF
-
-        # Create colors.xml
-        cat > app/src/main/res/values/colors.xml <<'EOF'
-        <?xml version="1.0" encoding="utf-8"?>
-        <resources>
-            <color name="purple_500">#FF6200EE</color>
-            <color name="purple_700">#FF3700B3</color>
-            <color name="teal_200">#FF03DAC5</color>
-            <color name="teal_700">#FF018786</color>
-            <color name="black">#FF000000</color>
-            <color name="white">#FFFFFFFF</color>
-        </resources>
-        EOF
-
-        # Create main_menu.xml
-        cat > app/src/main/res/menu/main_menu.xml <<'EOF'
-        <?xml version="1.0" encoding="utf-8"?>
-        <menu xmlns:android="http://schemas.android.com/apk/res/android">
-            <item
-                android:id="@+id/menu_about"
-                android:title="@string/menu_about" />
-            <item
-                android:id="@+id/menu_exit"
-                android:title="@string/menu_exit" />
-        </menu>
-        EOF
-
-        # Create activity_main.xml layout
-        cat > app/src/main/res/layout/activity_main.xml <<'EOF'
-        <?xml version="1.0" encoding="utf-8"?>
-        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:padding="16dp"
-            android:gravity="center">
-
-            <ImageView
-                android:layout_width="120dp"
-                android:layout_height="120dp"
-                android:src="@drawable/ic_notification"
-                android:layout_marginBottom="32dp" />
-
-            <TextView
-                android:id="@+id/tv_title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/app_name"
-                android:textSize="24sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="16dp"
-                android:gravity="center" />
-
-            <TextView
-                android:id="@+id/tv_status"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/permissions_required"
-                android:textSize="16sp"
-                android:layout_marginBottom="32dp"
-                android:gravity="center" />
-
-            <Button
-                android:id="@+id/btn_notification"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/permission_notification"
-                android:backgroundTint="@color/purple_500"
-                android:textColor="@color/white"
-                android:layout_marginBottom="16dp" />
-
-            <Button
-                android:id="@+id/btn_storage"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/permission_storage"
-                android:backgroundTint="@color/purple_500"
-                android:textColor="@color/white" />
-
-        </LinearLayout>
-        EOF
-
-        # Create custom notification icon
-        cat > app/src/main/res/drawable/ic_notification.xml <<'EOF'
-        <vector xmlns:android="http://schemas.android.com/apk/res/android"
-            android:width="24dp"
-            android:height="24dp"
-            android:viewportWidth="24"
-            android:viewportHeight="24"
-            android:tint="@color/purple_500">
-            <path
-                android:fillColor="#FF000000"
-                android:pathData="M12,22c1.1,0 2,-0.9 2,-2h-4c0,1.1 0.89,2 2,2zM18,16v-5c0,-3.07 -1.64,-5.64 -4.5,-6.32V4c0,-0.83 -0.67,-1.5 -1.5,-1.5s-1.5,0.67 -1.5,1.5v0.68C7.63,5.36 6,7.92 6,11v5l-2,2v1h16v-1l-2,-2z"/>
-        </vector>
-        EOF
-
-        # Create simple launcher icons
-        for density in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
-          cp app/src/main/res/drawable/ic_notification.xml app/src/main/res/mipmap-${density}/ic_launcher.xml
-        done
-
-        # Create AndroidManifest.xml
-        cat > app/src/main/AndroidManifest.xml <<'EOF'
-        <?xml version="1.0" encoding="utf-8"?>
-        <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-            xmlns:tools="http://schemas.android.com/tools">
-
-            <uses-permission android:name="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" 
-                tools:ignore="ProtectedPermissions" />
-            <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" 
-                android:maxSdkVersion="28" />
-            <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" 
-                android:maxSdkVersion="28" />
-            <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
-                tools:ignore="ScopedStorage" />
-
-            <application
-                android:allowBackup="true"
-                android:dataExtractionRules="@xml/data_extraction_rules"
-                android:fullBackupContent="@xml/backup_rules"
-                android:icon="@drawable/ic_notification"
-                android:label="@string/app_name"
-                android:supportsRtl="true"
-                android:theme="@style/Theme.AppCompat.Light.DarkActionBar"
-                tools:targetApi="31">
-
-                <activity
-                    android:name=".MainActivity"
-                    android:exported="true">
-                    <intent-filter>
-                        <action android:name="android.intent.action.MAIN" />
-                        <category android:name="android.intent.category.LAUNCHER" />
-                    </intent-filter>
-                </activity>
-
-                <service
-                    android:name=".NotificationListener"
-                    android:label="@string/app_name"
-                    android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
-                    android:exported="false">
-                    <intent-filter>
-                        <action android:name="android.service.notification.NotificationListenerService" />
-                    </intent-filter>
-                </service>
-            </application>
-        </manifest>
-        EOF
-
-        # Create backup rules
-        cat > app/src/main/res/xml/backup_rules.xml <<'EOF'
-        <?xml version="1.0" encoding="utf-8"?>
-        <full-backup-content>
-        </full-backup-content>
-        EOF
-
-        cat > app/src/main/res/xml/data_extraction_rules.xml <<'EOF'
-        <?xml version="1.0" encoding="utf-8"?>
-        <data-extraction-rules>
-            <cloud-backup>
-            </cloud-backup>
-            <device-transfer>
-            </device-transfer>
-        </data-extraction-rules>
-        EOF
-
-        # Create MainActivity.java
-        cat > app/src/main/java/com/example/notificationlogger/MainActivity.java <<'EOF'
-        package com.example.notificationlogger;
-
-        import android.Manifest;
-        import android.content.Intent;
-        import android.content.pm.PackageManager;
-        import android.os.Build;
-        import android.os.Bundle;
-        import android.os.Environment;
-        import android.provider.Settings;
-        import android.view.Menu;
-        import android.view.MenuItem;
-        import android.widget.Button;
-        import android.widget.TextView;
-        import android.widget.Toast;
-
-        import androidx.annotation.NonNull;
-        import androidx.appcompat.app.AlertDialog;
-        import androidx.appcompat.app.AppCompatActivity;
-        import androidx.core.app.ActivityCompat;
-        import androidx.core.content.ContextCompat;
-
-        public class MainActivity extends AppCompatActivity {
-            private static final int REQUEST_CODE_NOTIFICATION_LISTENER = 1001;
-            private static final int REQUEST_CODE_STORAGE = 1002;
-            
-            private TextView tvStatus;
-            private Button btnNotification, btnStorage;
-
-            @Override
-            protected void onCreate(Bundle savedInstanceState) {
-                super.onCreate(savedInstanceState);
-                setContentView(R.layout.activity_main);
-
-                initViews();
-                setupClickListeners();
-                updateStatus();
-            }
-
-            private void initViews() {
-                tvStatus = findViewById(R.id.tv_status);
-                btnNotification = findViewById(R.id.btn_notification);
-                btnStorage = findViewById(R.id.btn_storage);
-            }
-
-            private void setupClickListeners() {
-                btnNotification.setOnClickListener(v -> requestNotificationPermission());
-                btnStorage.setOnClickListener(v -> requestStoragePermission());
-            }
-
-            private void requestNotificationPermission() {
-                if (!isNotificationServiceEnabled()) {
-                    Intent intent = new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
-                    startActivityForResult(intent, REQUEST_CODE_NOTIFICATION_LISTENER);
-                } else {
-                    Toast.makeText(this, "Разрешение уже предоставлено", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            private void requestStoragePermission() {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    if (!Environment.isExternalStorageManager()) {
-                        Intent intent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
-                        startActivityForResult(intent, REQUEST_CODE_STORAGE);
-                    } else {
-                        Toast.makeText(this, "Разрешение уже предоставлено", Toast.LENGTH_SHORT).show();
-                    }
-                } else {
-                    if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) 
-                            != PackageManager.PERMISSION_GRANTED) {
-                        ActivityCompat.requestPermissions(this, 
-                            new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 
-                            REQUEST_CODE_STORAGE);
-                    } else {
-                        Toast.makeText(this, "Разрешение уже предоставлено", Toast.LENGTH_SHORT).show();
-                    }
-                }
-            }
-
-            private boolean isNotificationServiceEnabled() {
-                String pkgName = getPackageName();
-                final String flat = Settings.Secure.getString(getContentResolver(), "enabled_notification_listeners");
-                if (flat != null && !flat.isEmpty()) {
-                    final String[] names = flat.split(":");
-                    for (String name : names) {
-                        if (name.contains(pkgName)) {
-                            return true;
-                        }
-                    }
-                }
-                return false;
-            }
-
-            private boolean isStoragePermissionGranted() {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    return Environment.isExternalStorageManager();
-                } else {
-                    return ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) 
-                            == PackageManager.PERMISSION_GRANTED;
-                }
-            }
-
-            private void updateStatus() {
-                boolean notificationGranted = isNotificationServiceEnabled();
-                boolean storageGranted = isStoragePermissionGranted();
-                
-                if (notificationGranted && storageGranted) {
-                    tvStatus.setText(R.string.permissions_granted);
-                } else {
-                    tvStatus.setText(R.string.permissions_required);
-                }
-            }
-
-            @Override
-            protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-                super.onActivityResult(requestCode, resultCode, data);
-                if (requestCode == REQUEST_CODE_NOTIFICATION_LISTENER || requestCode == REQUEST_CODE_STORAGE) {
-                    updateStatus();
-                }
-            }
-
-            @Override
-            public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, 
-                    @NonNull int[] grantResults) {
-                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-                if (requestCode == REQUEST_CODE_STORAGE) {
-                    updateStatus();
-                }
-            }
-
-            @Override
-            protected void onResume() {
-                super.onResume();
-                updateStatus();
-            }
-
-            @Override
-            public boolean onCreateOptionsMenu(Menu menu) {
-                getMenuInflater().inflate(R.menu.main_menu, menu);
-                return true;
-            }
-
-            @Override
-            public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-                int id = item.getItemId();
-                if (id == R.id.menu_about) {
-                    new AlertDialog.Builder(this)
-                            .setTitle(R.string.app_name)
-                            .setMessage(R.string.about_text)
-                            .setPositiveButton("OK", null)
-                            .show();
-                    return true;
-                } else if (id == R.id.menu_exit) {
-                    finish();
-                    return true;
-                }
-                return super.onOptionsItemSelected(item);
-            }
-        }
-        EOF
-
-        # Create NotificationListener.java
-        cat > app/src/main/java/com/example/notificationlogger/NotificationListener.java <<'EOF'
-        package com.example.notificationlogger;
-
-        import android.app.Notification;
-        import android.content.ContentValues;
-        import android.database.sqlite.SQLiteDatabase;
-        import android.os.Build;
-        import android.os.Environment;
-        import android.service.notification.NotificationListenerService;
-        import android.service.notification.StatusBarNotification;
-        import android.util.Log;
-
-        import java.io.File;
-        import java.io.FileWriter;
-        import java.io.IOException;
-        import java.text.SimpleDateFormat;
-        import java.util.Date;
-        import java.util.Locale;
-
-        public class NotificationListener extends NotificationListenerService {
-            private static final String TAG = "NotificationLogger";
-            private DatabaseHelper dbHelper;
-            private FileWriter logFileWriter;
-
-            @Override
-            public void onCreate() {
-                super.onCreate();
-                dbHelper = new DatabaseHelper(this);
-                initLogFile();
-                Log.d(TAG, "NotificationListener service created");
-            }
-
-            private void initLogFile() {
-                try {
-                    File logDir;
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                        logDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "NotificationLogger");
-                    } else {
-                        logDir = new File(getExternalFilesDir(null), "logs");
-                    }
-                    
-                    if (!logDir.exists()) {
-                        logDir.mkdirs();
-                    }
-                    
-                    File logFile = new File(logDir, "notifications.log");
-                    logFileWriter = new FileWriter(logFile, true);
-                    Log.d(TAG, "Log file initialized: " + logFile.getAbsolutePath());
-                } catch (IOException e) {
-                    Log.e(TAG, "Error initializing log file", e);
-                }
-            }
-
-            @Override
-            public void onDestroy() {
-                super.onDestroy();
-                if (logFileWriter != null) {
-                    try {
-                        logFileWriter.close();
-                    } catch (IOException e) {
-                        Log.e(TAG, "Error closing log file", e);
-                    }
-                }
-                Log.d(TAG, "NotificationListener service destroyed");
-            }
-
-            @Override
-            public void onNotificationPosted(StatusBarNotification sbn) {
-                try {
-                    Notification notification = sbn.getNotification();
-                    if (notification == null) {
-                        Log.w(TAG, "Null notification received");
-                        return;
-                    }
-
-                    String packageName = sbn.getPackageName();
-                    if (packageName == null || packageName.isEmpty()) {
-                        Log.w(TAG, "Invalid package name");
-                        return;
-                    }
-
-                    String title = "";
-                    String text = "";
-                    
-                    if (notification.extras != null) {
-                        CharSequence titleSeq = notification.extras.getCharSequence(Notification.EXTRA_TITLE);
-                        CharSequence textSeq = notification.extras.getCharSequence(Notification.EXTRA_TEXT);
-                        
-                        title = titleSeq != null ? titleSeq.toString() : "";
-                        text = textSeq != null ? textSeq.toString() : "";
-                    }
-
-                    String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-                            .format(new Date());
-
-                    // Create table if not exists
-                    SQLiteDatabase db = dbHelper.getAppDatabase(packageName);
-                    if (db == null) {
-                        Log.e(TAG, "Failed to get database for package: " + packageName);
-                        return;
-                    }
-
-                    // Check for duplicates
-                    if (dbHelper.isDuplicate(packageName, title, text)) {
-                        Log.d(TAG, "Duplicate notification skipped: " + packageName);
-                        return;
-                    }
-
-                    // Save to database
-                    boolean saved = saveToDatabase(timestamp, packageName, title, text);
-                    
-                    // Save to log file
-                    saveToLogFile(timestamp, packageName, title, text);
-                    
-                    // Update metadata only if save was successful
-                    if (saved) {
-                        dbHelper.updateMetadata(packageName, timestamp);
-                        Log.d(TAG, String.format("Notification logged: %s | %s | %s", 
-                                packageName, title, text));
-                    } else {
-                        Log.e(TAG, "Failed to save notification to database");
-                    }
-                            
-                } catch (Exception e) {
-                    Log.e(TAG, "Error processing notification", e);
-                }
-            }
-
-            private boolean saveToDatabase(String timestamp, String packageName, String title, String text) {
-                try {
-                    SQLiteDatabase db = dbHelper.getAppDatabase(packageName);
-                    String tableName = packageName.replace(".", "_");
-                    ContentValues values = new ContentValues();
-                    values.put("timestamp", timestamp);
-                    values.put("title", title);
-                    values.put("text", text);
-                    long result = db.insert(tableName, null, values);
-                    return result != -1;
-                } catch (Exception e) {
-                    Log.e(TAG, "Error saving to database for package: " + packageName, e);
-                    return false;
-                }
-            }
-
-            private void saveToLogFile(String timestamp, String packageName, String title, String text) {
-                if (logFileWriter != null) {
-                    try {
-                        String logEntry = String.format("%s | %s | %s | %s%n", 
-                                timestamp, packageName, title, text);
-                        logFileWriter.write(logEntry);
-                        logFileWriter.flush();
-                    } catch (IOException e) {
-                        Log.e(TAG, "Error writing to log file", e);
-                    }
-                }
-            }
-
-            @Override
-            public void onNotificationRemoved(StatusBarNotification sbn) {
-                // Optional: handle notification removal
-            }
-        }
-        EOF
-
-        # Create DatabaseHelper.java
-        cat > app/src/main/java/com/example/notificationlogger/DatabaseHelper.java <<'EOF'
-        package com.example.notificationlogger;
-
-        import android.content.Context;
-        import android.database.Cursor;
-        import android.database.sqlite.SQLiteDatabase;
-        import android.database.sqlite.SQLiteException;
-        import android.database.sqlite.SQLiteOpenHelper;
-        import android.os.Environment;
-        import android.util.Log;
-
-        import java.io.File;
-
-        public class DatabaseHelper extends SQLiteOpenHelper {
-            private static final String TAG = "DatabaseHelper";
-            private static final String DATABASE_NAME = "notifications.db";
-            private static final int DATABASE_VERSION = 1;
-            private static final String METADATA_TABLE = "metadata";
-            private static final String COLUMN_ID = "id";
-            private static final String COLUMN_TIMESTAMP = "timestamp";
-            private static final String COLUMN_PACKAGE = "package_name";
-            private static final String COLUMN_TITLE = "title";
-            private static final String COLUMN_TEXT = "text";
-            private static final String COLUMN_DB_NAME = "db_name";
-            private static final String COLUMN_ROW_COUNT = "row_count";
-
-            private static final String CREATE_METADATA_TABLE =
-                    "CREATE TABLE " + METADATA_TABLE + " (" +
-                            COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                            COLUMN_TIMESTAMP + " TEXT NOT NULL, " +
-                            COLUMN_PACKAGE + " TEXT NOT NULL, " +
-                            COLUMN_DB_NAME + " TEXT NOT NULL, " +
-                            COLUMN_ROW_COUNT + " INTEGER NOT NULL)";
-
-            private final Context context;
-
-            public DatabaseHelper(Context context) {
-                super(context, getDatabasePath(context), null, DATABASE_VERSION);
-                this.context = context;
-            }
-
-            private static String getDatabasePath(Context context) {
-                File dbDir = new File(context.getExternalFilesDir(null), "databases");
-                if (!dbDir.exists()) {
-                    if (!dbDir.mkdirs()) {
-                        Log.e(TAG, "Failed to create database directory: " + dbDir.getAbsolutePath());
-                    }
-                }
-                String path = new File(dbDir, DATABASE_NAME).getAbsolutePath();
-                Log.d(TAG, "Database path: " + path);
-                return path;
-            }
-
-            @Override
-            public void onCreate(SQLiteDatabase db) {
-                try {
-                    db.execSQL(CREATE_METADATA_TABLE);
-                    Log.d(TAG, "Metadata table created");
-                } catch (SQLiteException e) {
-                    Log.e(TAG, "Error creating metadata table", e);
-                }
-            }
-
-            @Override
-            public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-                try {
-                    db.execSQL("DROP TABLE IF EXISTS " + METADATA_TABLE);
-                    Cursor cursor = db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name != 'android_metadata' AND name != ?",
-                            new String[]{METADATA_TABLE});
-                    while (cursor.moveToNext()) {
-                        db.execSQL("DROP TABLE IF EXISTS " + cursor.getString(0));
-                    }
-                    cursor.close();
-                    onCreate(db);
-                    Log.d(TAG, "Database upgraded, all tables dropped and recreated");
-                } catch (SQLiteException e) {
-                    Log.e(TAG, "Error upgrading database", e);
-                }
-            }
-
-            public SQLiteDatabase getAppDatabase(String packageName) {
-                if (packageName == null || packageName.isEmpty()) {
-                    Log.e(TAG, "Invalid package name");
-                    return null;
-                }
-                String tableName = packageName.replace(".", "_");
-                if (!isValidTableName(tableName)) {
-                    Log.e(TAG, "Invalid table name: " + tableName);
-                    return null;
-                }
-                try {
-                    SQLiteDatabase db = getWritableDatabase();
-                    String createTableQuery =
-                            "CREATE TABLE IF NOT EXISTS " + tableName + " (" +
-                                    COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                                    COLUMN_TIMESTAMP + " TEXT NOT NULL, " +
-                                    COLUMN_TITLE + " TEXT, " +
-                                    COLUMN_TEXT + " TEXT)";
-                    db.execSQL(createTableQuery);
-                    Log.d(TAG, "Table created or already exists: " + tableName);
-                    return db;
-                } catch (SQLiteException e) {
-                    Log.e(TAG, "Error creating table for package: " + packageName, e);
-                    return null;
-                }
-            }
-
-            private boolean isValidTableName(String tableName) {
-                return tableName.matches("^[a-zA-Z0-9_]+$");
-            }
-
-            public boolean isDuplicate(String packageName, String title, String text) {
-                if (packageName == null || packageName.isEmpty()) {
-                    Log.e(TAG, "Invalid package name for duplicate check");
-                    return false;
-                }
-                String tableName = packageName.replace(".", "_");
-                try {
-                    SQLiteDatabase db = getReadableDatabase();
-                    String query = "SELECT " + COLUMN_TITLE + ", " + COLUMN_TEXT + " FROM " + tableName +
-                            " WHERE " + COLUMN_TITLE + " = ? AND " + COLUMN_TEXT + " = ? " +
-                            " ORDER BY " + COLUMN_TIMESTAMP + " DESC LIMIT 1";
-                    Cursor cursor = db.rawQuery(query, new String[]{title, text});
-                    boolean isDuplicate = cursor.moveToFirst();
-                    cursor.close();
-                    return isDuplicate;
-                } catch (SQLiteException e) {
-                    Log.e(TAG, "Error checking duplicates for table: " + tableName, e);
-                    return false; // Assume not a duplicate if table doesn't exist
-                }
-            }
-
-            public void updateMetadata(String packageName, String timestamp) {
-                if (packageName == null || packageName.isEmpty()) {
-                    Log.e(TAG, "Invalid package name for metadata update");
-                    return;
-                }
-                String tableName = packageName.replace(".", "_");
-                try {
-                    SQLiteDatabase db = getWritableDatabase();
-                    Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + tableName, null);
-                    int rowCount = 0;
-                    if (cursor.moveToFirst()) {
-                        rowCount = cursor.getInt(0);
-                    }
-                    cursor.close();
-
-                    db.execSQL("INSERT OR REPLACE INTO " + METADATA_TABLE + " (" +
-                                    COLUMN_TIMESTAMP + ", " + COLUMN_PACKAGE + ", " + COLUMN_DB_NAME + ", " + COLUMN_ROW_COUNT + ") " +
-                                    "VALUES (?, ?, ?, ?)",
-                            new Object[]{timestamp, packageName, tableName, rowCount});
-                    Log.d(TAG, "Metadata updated for package: " + packageName + ", rows: " + rowCount);
-                } catch (SQLiteException e) {
-                    Log.e(TAG, "Error updating metadata for package: " + packageName, e);
-                }
-            }
-        }
-        EOF
-
-    - name: Build with Gradle
+        cd android
+        ./gradlew clean
+        
+    - name: Build Debug APK
       run: |
-        ./gradlew clean assembleDebug --stacktrace
-
-    - name: Upload APK
+        cd android
+        ./gradlew assembleDebug
+        
+    - name: Build Release APK
+      run: |
+        cd android
+        ./gradlew assembleRelease
+        
+    - name: Upload Debug APK
       uses: actions/upload-artifact@v4
       with:
-        name: NotificationLogger-Debug-APK
-        path: app/build/outputs/apk/debug/*.apk
-        retention-days: 7
-
-    - name: Upload build logs
-      if: failure()
+        name: debug-apk
+        path: android/app/build/outputs/apk/debug/*.apk
+        
+    - name: Upload Release APK
       uses: actions/upload-artifact@v4
       with:
-        name: build-logs
-        path: |
-          app/build/reports/
-          gradle-*.log
-        retention-days: 3
+        name: release-apk
+        path: android/app/build/outputs/apk/release/*.apk
+        
+    - name: Create Release
+      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ github.run_number }}
+        release_name: Release v${{ github.run_number }}
+        body: |
+          Автоматическая сборка APK
+          
+          Изменения:
+          - ${{ github.event.head_commit.message }}
+        draft: false
+        prerelease: false
+        
+    - name: Upload Release Asset (Debug)
+      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: android/app/build/outputs/apk/debug/app-debug.apk
+        asset_name: NotifLogger-debug-v${{ github.run_number }}.apk
+        asset_content_type: application/vnd.android.package-archive
+        
+    - name: Upload Release Asset (Release)
+      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: android/app/build/outputs/apk/release/app-release-unsigned.apk
+        asset_name: NotifLogger-release-v${{ github.run_number }}.apk
+        asset_content_type: application/vnd.android.package-archive

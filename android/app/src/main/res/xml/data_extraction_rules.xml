@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data-extraction-rules>
+    <cloud-backup>
+        <!-- Exclude sensitive activation data from cloud backup -->
+        <exclude domain="sharedpref" path="activation_data.xml" />
+    </cloud-backup>
+    <device-transfer>
+        <!-- Allow device transfer for most data except activation -->
+        <exclude domain="sharedpref" path="activation_data.xml" />
+    </device-transfer>
+</data-extraction-rules>

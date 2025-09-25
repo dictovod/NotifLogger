@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/background">
+
+    <!-- Status Bar Simulation (как в веб-версии) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="24dp"
+        android:background="#1f2937"
+        android:orientation="horizontal"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:gravity="center_vertical">
+        
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="9:41"
+            android:textColor="@color/white"
+            android:textSize="12sp" />
+        
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+            
+            <View
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginEnd="2dp"
+                android:background="@color/white"
+                android:backgroundTint="@color/white" />
+            
+            <View
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginEnd="4dp"
+                android:background="@color/white"
+                android:backgroundTint="@color/white" />
+            
+            <FrameLayout
+                android:layout_width="16dp"
+                android:layout_height="8dp"
+                android:background="@drawable/battery_indicator">
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_margin="1dp"
+                    android:background="@color/white" />
+            </FrameLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- App Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:background="@color/primary"
+        android:orientation="horizontal"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:gravity="center_vertical">
+        
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/app_name"
+            android:textColor="@color/text_on_primary"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+        
+        <ImageButton
+            android:id="@+id/btn_settings"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_settings"
+            android:tint="@color/text_on_primary"
+            android:contentDescription="Настройки" />
+    </LinearLayout>
+
+    <!-- Main Content -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="32dp">
+
+            <!-- Status Icon Container -->
+            <FrameLayout
+                android:id="@+id/status_container"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:layout_marginBottom="32dp"
+                android:background="@drawable/bg_status_inactive">
+                
+                <ImageView
+                    android:id="@+id/status_icon"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_bell_inactive"
+                    android:contentDescription="Статус активации" />
+            </FrameLayout>
+
+            <!-- Status Text -->
+            <TextView
+                android:id="@+id/tv_status_title"
+                style="@style/TitleText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:text="@string/status_not_activated" />
+
+            <TextView
+                android:id="@+id/tv_status_description"
+                style="@style/SubtitleText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="32dp"
+                android:text="@string/status_description_not_activated" />
+
+            <!-- Action Button -->
+            <Button
+                android:id="@+id/btn_activate"
+                style="@style/PrimaryButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/btn_activate" />
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Bottom Navigation (опционально) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:background="@color/card_background"
+        android:orientation="horizontal"
+        android:elevation="8dp">
+
+        <FrameLayout
+            android:id="@+id/nav_home"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true">
+            
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="vertical"
+                android:gravity="center">
+                
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_home"
+                    android:tint="@color/primary" />
+                
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Главная"
+                    android:textSize="10sp"
+                    android:textColor="@color/primary"
+                    android:layout_marginTop="2dp" />
+            </LinearLayout>
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/nav_permissions"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true">
+            
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="vertical"
+                android:gravity="center">
+                
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_permissions"
+                    android:tint="@color/text_secondary" />
+                
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Разрешения"
+                    android:textSize="10sp"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginTop="2dp" />
+            </LinearLayout>
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/nav_logs"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true">
+            
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="vertical"
+                android:gravity="center">
+                
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_logs"
+                    android:tint="@color/text_secondary" />
+                
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Логи"
+                    android:textSize="10sp"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginTop="2dp" />
+            </LinearLayout>
+        </FrameLayout>
+    </LinearLayout>
+
+</LinearLayout>

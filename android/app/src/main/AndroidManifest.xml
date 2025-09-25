@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Разрешения для логирования уведомлений -->
+    <uses-permission android:name="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" 
+        tools:ignore="ProtectedPermissions" />
+    
+    <!-- Разрешения для сохранения логов -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" 
+        android:maxSdkVersion="28" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" 
+        android:maxSdkVersion="28" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage" />
+    
+    <!-- Разрешения для получения IMEI -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    
+    <!-- Интернет для валидации токенов -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@drawable/ic_app_icon"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme"
+        tools:targetApi="31">
+
+        <!-- Главная активность -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:theme="@style/AppTheme">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Активность настроек -->
+        <activity
+            android:name=".SettingsActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/AppTheme" />
+
+        <!-- Активность просмотра логов -->
+        <activity
+            android:name=".LogsActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/AppTheme" />
+
+        <!-- Активность разрешений -->
+        <activity
+            android:name=".PermissionsActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/AppTheme" />
+
+        <!-- Сервис для перехвата уведомлений -->
+        <service
+            android:name=".NotificationLoggerService"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
+    </application>
+</manifest>
