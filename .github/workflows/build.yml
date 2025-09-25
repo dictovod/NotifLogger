@@ -284,6 +284,8 @@ jobs:
             <string name="activate">Активировать</string>
             <string name="activation_success">Активация успешна</string>
             <string name="activation_failed">Активация провалена</string>
+            <string name="token_expired">Токен истёк</string>
+            <string name="imei_mismatch">IMEI токена не совпадает</string>
         </resources>
         EOF
 
@@ -313,7 +315,7 @@ jobs:
         </menu>
         EOF
 
-        # Create activity_main.xml (with TabLayout and ViewPager for tabs)
+        # Create activity_main.xml
         cat > app/src/main/res/layout/activity_main.xml <<'EOF'
         <?xml version="1.0" encoding="utf-8"?>
         <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -341,7 +343,7 @@ jobs:
         </androidx.coordinatorlayout.widget.CoordinatorLayout>
         EOF
 
-        # Create layout_permissions.xml for permissions tab
+        # Create layout_permissions.xml
         cat > app/src/main/res/layout/layout_permissions.xml <<'EOF'
         <?xml version="1.0" encoding="utf-8"?>
         <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -397,7 +399,7 @@ jobs:
         </LinearLayout>
         EOF
 
-        # Create layout_activation.xml for activation tab
+        # Create layout_activation.xml
         cat > app/src/main/res/layout/layout_activation.xml <<'EOF'
         <?xml version="1.0" encoding="utf-8"?>
         <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -451,7 +453,7 @@ jobs:
         </LinearLayout>
         EOF
 
-        # Create custom notification icon BW (black and white)
+        # Create ic_notification_bw.xml
         cat > app/src/main/res/drawable/ic_notification_bw.xml <<'EOF'
         <vector xmlns:android="http://schemas.android.com/apk/res/android"
             android:width="24dp"
@@ -465,7 +467,7 @@ jobs:
         </vector>
         EOF
 
-        # Create custom notification icon color
+        # Create ic_notification_color.xml
         cat > app/src/main/res/drawable/ic_notification_color.xml <<'EOF'
         <vector xmlns:android="http://schemas.android.com/apk/res/android"
             android:width="24dp"
@@ -479,12 +481,12 @@ jobs:
         </vector>
         EOF
 
-        # Create simple launcher icons (BW by default)
+        # Create launcher icons
         for density in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
           cp app/src/main/res/drawable/ic_notification_bw.xml app/src/main/res/mipmap-${density}/ic_launcher.xml
         done
 
-        # Create AndroidManifest.xml (added READ_PHONE_STATE permission)
+        # Create AndroidManifest.xml
         cat > app/src/main/AndroidManifest.xml <<'EOF'
         <?xml version="1.0" encoding="utf-8"?>
         <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -549,7 +551,7 @@ jobs:
         </data-extraction-rules>
         EOF
 
-        # Create MainActivity.java (with tabs, IMEI, token validation, icon change)
+        # Create MainActivity.java
         cat > app/src/main/java/com/example/notificationlogger/MainActivity.java <<'EOF'
         package com.example.notificationlogger;
 
@@ -589,7 +591,9 @@ jobs:
         import com.google.android.material.tabs.TabLayout;
 
         import java.util.Base64;
-        import java.util.Date;
+        import java.text.DateFormat;
+        import java.text.ParseException;
+        import org.json.JSONException;
         import org.json.JSONObject;
 
         public class MainActivity extends AppCompatActivity {
@@ -662,29 +666,32 @@ jobs:
 
                     String deviceImei = getImei();
                     if (!tokenImei.equals(deviceImei)) {
+                        Toast.makeText(this, R.string.imei_mismatch, Toast.LENGTH_SHORT).show();
                         return false;
                     }
 
-                    Date startDate = java.text.DateFormat.getDateTimeInstance().parse(startDateStr);
+                    Date startDate = DateFormat.getDateTimeInstance().parse(startDateStr);
                     Date expiryDate = new Date(startDate.getTime() + durationSeconds * 1000);
-                    return new Date().before(expiryDate);
-                } catch (Exception e) {
+                    if (new Date().after(expiryDate)) {
+                        Toast.makeText(this, R.string.token_expired, Toast.LENGTH_SHORT).show();
+                        return false;
+                    }
+                    return true;
+                } catch (ParseException | JSONException e) {
+                    Toast.makeText(this, R.string.activation_failed, Toast.LENGTH_SHORT).show();
                     return false;
                 }
             }
 
             private void activateApp(String token) {
                 if (validateToken(token)) {
-                    prefs.edit().putBoolean("activated", true).apply();
+                    prefs.edit().putBoolean("activated", true).putString("active_token", token).apply();
                     isActivated = true;
                     loadActivationStatus();
-                    Toast.makeText(this, getString(R.string.activation_success), Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(this, getString(R.string.activation_failed), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, R.string.activation_success, Toast.LENGTH_SHORT).show();
                 }
             }
 
-            // Tabs Adapter
             private class TabsAdapter extends FragmentPagerAdapter {
                 public TabsAdapter(FragmentManager fm) {
                     super(fm, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT);
@@ -692,29 +699,19 @@ jobs:
 
                 @Override
                 public Fragment getItem(int position) {
-                    if (position == 0) {
-                        return new PermissionsFragment();
-                    } else {
-                        return new ActivationFragment();
-                    }
+                    if (position == 0) return new PermissionsFragment();
+                    else return new ActivationFragment();
                 }
 
                 @Override
-                public int getCount() {
-                    return 2;
-                }
+                public int getCount() { return 2; }
 
                 @Override
                 public CharSequence getPageTitle(int position) {
-                    if (position == 0) {
-                        return "Разрешения";
-                    } else {
-                        return getString(R.string.tab_activation);
-                    }
+                    return position == 0 ? "Разрешения" : getString(R.string.tab_activation);
                 }
             }
 
-            // Permissions Fragment
             public static class PermissionsFragment extends Fragment {
                 @Override
                 public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -732,7 +729,6 @@ jobs:
                 }
             }
 
-            // Activation Fragment
             public static class ActivationFragment extends Fragment {
                 @Override
                 public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -880,7 +876,7 @@ jobs:
         }
         EOF
 
-        # NotificationListener.java (add activation check before logging)
+        # Create NotificationListener.java
         cat > app/src/main/java/com/example/notificationlogger/NotificationListener.java <<'EOF'
         package com.example.notificationlogger;
 
@@ -959,7 +955,10 @@ jobs:
 
                 try {
                     Notification notification = sbn.getNotification();
-                    if (notification == null) return;
+                    if (notification == null) {
+                        Log.w(TAG, "Null notification received");
+                        return;
+                    }
 
                     String packageName = sbn.getPackageName();
                     String title = "";
@@ -976,19 +975,13 @@ jobs:
                     String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
                             .format(new Date());
 
-                    // Check for duplicates
                     if (dbHelper.isDuplicate(packageName, title, text)) {
                         Log.d(TAG, "Duplicate notification skipped: " + packageName);
                         return;
                     }
 
-                    // Save to database
                     saveToDatabase(timestamp, packageName, title, text);
-                    
-                    // Save to log file
                     saveToLogFile(timestamp, packageName, title, text);
-                    
-                    // Update metadata
                     dbHelper.updateMetadata(packageName, timestamp);
                     
                     Log.d(TAG, String.format("Notification logged: %s | %s | %s", 
@@ -1033,7 +1026,7 @@ jobs:
         }
         EOF
 
-        # DatabaseHelper.java remains the same as previous
+        # Create DatabaseHelper.java
         cat > app/src/main/java/com/example/notificationlogger/DatabaseHelper.java <<'EOF'
         package com.example.notificationlogger;
 
