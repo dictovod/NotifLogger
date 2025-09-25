@@ -8,6 +8,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -156,8 +157,8 @@ public class PermissionsActivity extends AppCompatActivity {
                             intent.setData(Uri.parse("package:" + getPackageName()));
                             startActivityForResult(intent, REQUEST_STORAGE_PERMISSION);
                         } catch (Exception e) {
-                            Utils.showToast(this, "Не удалось открыть настройки. Включите доступ вручную в настройках приложения.");
                             Log.e("PermissionsActivity", "Error opening storage settings", e);
+                            Utils.showToast(this, "Не удалось открыть настройки. Включите доступ вручную в настройках приложения.");
                         }
                     }
                 );
