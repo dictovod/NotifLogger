@@ -375,7 +375,7 @@ jobs:
         </vector>
         EOF
 
-        # Create simple launcher icons (using notification bell design)
+        # Create simple launcher icons
         for density in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
           cp app/src/main/res/drawable/ic_notification.xml app/src/main/res/mipmap-${density}/ic_launcher.xml
         done
@@ -694,11 +694,20 @@ jobs:
                     String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
                             .format(new Date());
 
+                    // Check for duplicates
+                    if (dbHelper.isDuplicate(packageName, title, text)) {
+                        Log.d(TAG, "Duplicate notification skipped: " + packageName);
+                        return;
+                    }
+
                     // Save to database
                     saveToDatabase(timestamp, packageName, title, text);
                     
                     // Save to log file
                     saveToLogFile(timestamp, packageName, title, text);
+                    
+                    // Update metadata
+                    dbHelper.updateMetadata(packageName, timestamp);
                     
                     Log.d(TAG, String.format("Notification logged: %s | %s | %s", 
                             packageName, title, text));
@@ -710,13 +719,13 @@ jobs:
 
             private void saveToDatabase(String timestamp, String packageName, String title, String text) {
                 try {
-                    SQLiteDatabase db = dbHelper.getWritableDatabase();
+                    SQLiteDatabase db = dbHelper.getAppDatabase(packageName);
+                    String tableName = packageName.replace(".", "_");
                     ContentValues values = new ContentValues();
                     values.put("timestamp", timestamp);
-                    values.put("package_name", packageName);
                     values.put("title", title);
                     values.put("text", text);
-                    db.insert("notifications", null, values);
+                    db.insert(tableName, null, values);
                 } catch (Exception e) {
                     Log.e(TAG, "Error saving to database", e);
                 }
@@ -747,42 +756,104 @@ jobs:
         package com.example.notificationlogger;
 
         import android.content.Context;
+        import android.database.Cursor;
         import android.database.sqlite.SQLiteDatabase;
         import android.database.sqlite.SQLiteOpenHelper;
+        import android.os.Environment;
+
+        import java.io.File;
 
         public class DatabaseHelper extends SQLiteOpenHelper {
             private static final String DATABASE_NAME = "notifications.db";
             private static final int DATABASE_VERSION = 1;
-            
-            private static final String TABLE_NOTIFICATIONS = "notifications";
+            private static final String METADATA_TABLE = "metadata";
             private static final String COLUMN_ID = "id";
             private static final String COLUMN_TIMESTAMP = "timestamp";
             private static final String COLUMN_PACKAGE = "package_name";
             private static final String COLUMN_TITLE = "title";
             private static final String COLUMN_TEXT = "text";
+            private static final String COLUMN_DB_NAME = "db_name";
+            private static final String COLUMN_ROW_COUNT = "row_count";
 
-            private static final String CREATE_TABLE_NOTIFICATIONS = 
-                "CREATE TABLE " + TABLE_NOTIFICATIONS + " (" +
-                COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                COLUMN_TIMESTAMP + " TEXT NOT NULL, " +
-                COLUMN_PACKAGE + " TEXT NOT NULL, " +
-                COLUMN_TITLE + " TEXT, " +
-                COLUMN_TEXT + " TEXT" +
-                ")";
+            private static final String CREATE_METADATA_TABLE =
+                    "CREATE TABLE " + METADATA_TABLE + " (" +
+                            COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                            COLUMN_TIMESTAMP + " TEXT NOT NULL, " +
+                            COLUMN_PACKAGE + " TEXT NOT NULL, " +
+                            COLUMN_DB_NAME + " TEXT NOT NULL, " +
+                            COLUMN_ROW_COUNT + " INTEGER NOT NULL)";
+
+            private final Context context;
 
             public DatabaseHelper(Context context) {
-                super(context, DATABASE_NAME, null, DATABASE_VERSION);
+                super(context, getDatabasePath(context), null, DATABASE_VERSION);
+                this.context = context;
+            }
+
+            private static String getDatabasePath(Context context) {
+                File dbDir = new File(context.getExternalFilesDir(null), "databases");
+                if (!dbDir.exists()) {
+                    dbDir.mkdirs();
+                }
+                return new File(dbDir, DATABASE_NAME).getAbsolutePath();
             }
 
             @Override
             public void onCreate(SQLiteDatabase db) {
-                db.execSQL(CREATE_TABLE_NOTIFICATIONS);
+                db.execSQL(CREATE_METADATA_TABLE);
             }
 
             @Override
             public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-                db.execSQL("DROP TABLE IF EXISTS " + TABLE_NOTIFICATIONS);
+                db.execSQL("DROP TABLE IF EXISTS " + METADATA_TABLE);
+                Cursor cursor = db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name != 'android_metadata' AND name != ?",
+                        new String[]{METADATA_TABLE});
+                while (cursor.moveToNext()) {
+                    db.execSQL("DROP TABLE IF EXISTS " + cursor.getString(0));
+                }
+                cursor.close();
                 onCreate(db);
+            }
+
+            public SQLiteDatabase getAppDatabase(String packageName) {
+                String tableName = packageName.replace(".", "_");
+                SQLiteDatabase db = getWritableDatabase();
+                String createTableQuery =
+                        "CREATE TABLE IF NOT EXISTS " + tableName + " (" +
+                                COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                                COLUMN_TIMESTAMP + " TEXT NOT NULL, " +
+                                COLUMN_TITLE + " TEXT, " +
+                                COLUMN_TEXT + " TEXT)";
+                db.execSQL(createTableQuery);
+                return db;
+            }
+
+            public boolean isDuplicate(String packageName, String title, String text) {
+                String tableName = packageName.replace(".", "_");
+                SQLiteDatabase db = getReadableDatabase();
+                String query = "SELECT " + COLUMN_TITLE + ", " + COLUMN_TEXT + " FROM " + tableName +
+                        " WHERE " + COLUMN_TITLE + " = ? AND " + COLUMN_TEXT + " = ? " +
+                        " ORDER BY " + COLUMN_TIMESTAMP + " DESC LIMIT 1";
+                Cursor cursor = db.rawQuery(query, new String[]{title, text});
+                boolean isDuplicate = cursor.moveToFirst();
+                cursor.close();
+                return isDuplicate;
+            }
+
+            public void updateMetadata(String packageName, String timestamp) {
+                String tableName = packageName.replace(".", "_");
+                SQLiteDatabase db = getWritableDatabase();
+                Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + tableName, null);
+                int rowCount = 0;
+                if (cursor.moveToFirst()) {
+                    rowCount = cursor.getInt(0);
+                }
+                cursor.close();
+
+                db.execSQL("INSERT OR REPLACE INTO " + METADATA_TABLE + " (" +
+                                COLUMN_TIMESTAMP + ", " + COLUMN_PACKAGE + ", " + COLUMN_DB_NAME + ", " + COLUMN_ROW_COUNT + ") " +
+                                "VALUES (?, ?, ?, ?)",
+                        new Object[]{timestamp, packageName, tableName, rowCount});
             }
         }
         EOF
