@@ -34,45 +34,65 @@ public class ActivationManager {
     }
 
     /**
+     * Активирует приложение с указанными параметрами
+     */
+    public void activate(String uuid, String startDate, int durationSeconds) {
+        try {
+            Date startDateParsed = parseISODate(startDate);
+            if (startDateParsed == null) return;
+
+            Date currentDate = new Date();
+            Date expirationDate = new Date(startDateParsed.getTime() + (durationSeconds * 1000));
+
+            if (currentDate.before(startDateParsed) || currentDate.after(expirationDate)) {
+                return; // Не активируем, если дата вне диапазона
+            }
+
+            String imei = Utils.getDeviceIMEI(context);
+            saveActivation(imei, uuid, currentDate.getTime(), expirationDate.getTime());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Деактивирует приложение
+     */
+    public void deactivate() {
+        clearActivation();
+    }
+
+    /**
      * Проверяет и активирует приложение с помощью токена
      * Реализует ту же логику, что и Python скрипт для генерации токенов
      */
     public boolean validateAndActivate(String imei, String token) {
         try {
-            // Декодируем токен из Base64 (как в Python скрипте)
             byte[] decodedBytes = Base64.decode(token, Base64.URL_SAFE);
             String decodedJson = new String(decodedBytes);
             
-            // Парсим JSON данные токена
             JSONObject tokenData = new JSONObject(decodedJson);
-            
-            // Извлекаем данные токена
             String tokenImei = tokenData.getString("imei");
             String tokenUuid = tokenData.getString("uuid");
             String startDateStr = tokenData.getString("start_date");
             long durationSeconds = tokenData.getLong("duration_seconds");
             
-            // Проверяем соответствие IMEI
             if (!tokenImei.equals(imei)) {
                 return false;
             }
             
-            // Парсим дату начала действия токена
             Date startDate = parseISODate(startDateStr);
             if (startDate == null) {
                 return false;
             }
             
-            // Вычисляем дату окончания действия
             Date expirationDate = new Date(startDate.getTime() + (durationSeconds * 1000));
             Date currentDate = new Date();
             
-            // Проверяем срок действия токена
             if (currentDate.before(startDate) || currentDate.after(expirationDate)) {
                 return false;
             }
             
-            // Токен валиден - сохраняем активацию
             saveActivation(imei, tokenUuid, currentDate.getTime(), expirationDate.getTime());
             return true;
             
@@ -88,7 +108,6 @@ public class ActivationManager {
     public boolean isActivated() {
         boolean activated = preferences.getBoolean(KEY_IS_ACTIVATED, false);
         
-        // Если активировано, проверяем срок действия
         if (activated && isActivationExpired()) {
             clearActivation();
             return false;
@@ -154,13 +173,11 @@ public class ActivationManager {
      */
     private Date parseISODate(String dateStr) {
         try {
-            // Поддержка полного формата ISO 8601 (например, "2025-09-25T10:29:03.477360")
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS", Locale.US);
-            sdf.setTimeZone(TimeZone.getTimeZone("UTC")); // Учитываем UTC, как в примере
+            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
             return sdf.parse(dateStr);
         } catch (ParseException e) {
             e.printStackTrace();
-            // Попытка парсинга без микросекунд как запасной вариант
             try {
                 SimpleDateFormat sdfFallback = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US);
                 sdfFallback.setTimeZone(TimeZone.getTimeZone("UTC"));
