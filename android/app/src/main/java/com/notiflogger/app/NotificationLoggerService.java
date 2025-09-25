@@ -1,196 +1,70 @@
 package com.notiflogger.app;
 
-import android.app.Notification;
+import android.app.Service;
 import android.content.Intent;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
 import android.os.IBinder;
-import android.service.notification.NotificationListenerService;
-import android.service.notification.StatusBarNotification;
 import android.util.Base64;
 import android.util.Log;
-import org.json.JSONException;
 import org.json.JSONObject;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-public class NotificationLoggerService extends NotificationListenerService {
-    private static final String TAG = "NotifLoggerService";
+public class NotificationLoggerService extends Service {
+    private static final String TAG = "NotificationLoggerService";
     private ActivationManager activationManager;
-    private File logFile;
-    private SimpleDateFormat dateFormat;
 
     @Override
     public void onCreate() {
         super.onCreate();
         activationManager = new ActivationManager(this);
-        dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-        createLogFile();
-        checkActivationToken();
         Log.d(TAG, "NotificationLoggerService created");
     }
 
     @Override
-    public void onNotificationPosted(StatusBarNotification sbn) {
-        if (!activationManager.isActivated()) return;
-        try {
-            logNotification(sbn, "POSTED");
-        } catch (Exception e) {
-            Log.e(TAG, "Error logging notification", e);
-        }
-    }
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.d(TAG, "NotificationLoggerService started");
+        if (intent != null) {
+            // Assuming the intent contains uuid, startDate, and durationSeconds
+            String uuid = intent.getStringExtra("uuid");
+            String startDate = intent.getStringExtra("start_date");
+            int durationSeconds = intent.getIntExtra("duration_seconds", -1);
 
-    @Override
-    public void onNotificationRemoved(StatusBarNotification sbn) {
-        if (!activationManager.isActivated()) return;
-        try {
-            logNotification(sbn, "REMOVED");
-        } catch (Exception e) {
-            Log.e(TAG, "Error logging notification removal", e);
-        }
-    }
+            if (uuid != null && startDate != null && durationSeconds != -1) {
+                try {
+                    // Construct the token as per the new format
+                    JSONObject tokenData = new JSONObject();
+                    tokenData.put("device_id", uuid); // Assuming uuid is the device_id
+                    tokenData.put("start_date", startDate);
+                    tokenData.put("duration_seconds", durationSeconds);
+                    String token = Base64.encodeToString(tokenData.toString().getBytes(), Base64.URL_SAFE | Base64.NO_WRAP);
 
-    private void logNotification(StatusBarNotification sbn, String action) {
-        try {
-            Notification notification = sbn.getNotification();
-            String packageName = sbn.getPackageName();
-            JSONObject logEntry = new JSONObject();
-            logEntry.put("timestamp", dateFormat.format(new Date()));
-            logEntry.put("action", action);
-            logEntry.put("package_name", packageName);
-            logEntry.put("app_name", getAppName(packageName));
-            logEntry.put("post_time", dateFormat.format(new Date(sbn.getPostTime())));
-            logEntry.put("id", sbn.getId());
-            logEntry.put("tag", sbn.getTag() != null ? sbn.getTag() : "");
-            logEntry.put("key", sbn.getKey());
-            if (notification != null) {
-                logEntry.put("ticker", getNotificationText(notification.tickerText));
-                if (notification.extras != null) {
-                    logEntry.put("title", getNotificationText(notification.extras.getCharSequence(Notification.EXTRA_TITLE)));
-                    logEntry.put("text", getNotificationText(notification.extras.getCharSequence(Notification.EXTRA_TEXT)));
-                    logEntry.put("big_text", getNotificationText(notification.extras.getCharSequence(Notification.EXTRA_BIG_TEXT)));
-                    logEntry.put("sub_text", getNotificationText(notification.extras.getCharSequence(Notification.EXTRA_SUB_TEXT)));
-                    logEntry.put("info_text", getNotificationText(notification.extras.getCharSequence(Notification.EXTRA_INFO_TEXT)));
+                    // Activate using the new validateAndActivate method
+                    boolean success = activationManager.validateAndActivate(token);
+                    if (success) {
+                        Log.i(TAG, "Activation successful in NotificationLoggerService");
+                    } else {
+                        Log.e(TAG, "Activation failed in NotificationLoggerService");
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Error constructing token: " + e.getMessage(), e);
                 }
-                logEntry.put("priority", notification.priority);
-                logEntry.put("category", notification.category != null ? notification.category : "");
-                logEntry.put("flags", notification.flags);
-                logEntry.put("ongoing", (notification.flags & Notification.FLAG_ONGOING_EVENT) != 0);
-                logEntry.put("auto_cancel", (notification.flags & Notification.FLAG_AUTO_CANCEL) != 0);
+            } else {
+                Log.w(TAG, "Missing activation parameters in intent");
             }
-            logEntry.put("user_id", sbn.getUserId());
-            writeLogEntry(logEntry.toString());
-            Log.d(TAG, "Logged notification: " + packageName + " - " + action);
-        } catch (JSONException e) {
-            Log.e(TAG, "Error creating JSON log entry", e);
         }
-    }
-
-    private String getAppName(String packageName) {
-        try {
-            PackageManager pm = getPackageManager();
-            ApplicationInfo appInfo = pm.getApplicationInfo(packageName, 0);
-            return pm.getApplicationLabel(appInfo).toString();
-        } catch (PackageManager.NameNotFoundException e) {
-            return packageName;
-        }
-    }
-
-    private String getNotificationText(CharSequence text) {
-        return text != null ? text.toString() : "";
-    }
-
-    private void createLogFile() {
-        try {
-            File logDir = new File(getExternalFilesDir(null), "notification_logs");
-            if (!logDir.exists()) logDir.mkdirs();
-            String fileName = "notifications_" + new SimpleDateFormat("yyyy_MM_dd", Locale.getDefault()).format(new Date()) + ".json";
-            logFile = new File(logDir, fileName);
-            if (!logFile.exists()) {
-                logFile.createNewFile();
-                JSONObject header = new JSONObject();
-                header.put("log_start", dateFormat.format(new Date()));
-                header.put("device_info", Utils.getDeviceInfo());
-                header.put("app_version", "1.0.0");
-                writeLogEntry("=== LOG START ===");
-                writeLogEntry(header.toString());
-                writeLogEntry("=== NOTIFICATIONS ===");
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Error creating log file", e);
-        }
-    }
-
-    private synchronized void writeLogEntry(String entry) {
-        try {
-            if (logFile != null && logFile.exists()) {
-                FileWriter writer = new FileWriter(logFile, true);
-                writer.write(entry + "\n");
-                writer.flush();
-                writer.close();
-            }
-        } catch (IOException e) {
-            Log.e(TAG, "Error writing to log file", e);
-        }
+        // Continue with notification logging logic
+        return START_STICKY;
     }
 
     @Override
     public IBinder onBind(Intent intent) {
-        return super.onBind(intent);
+        return null;
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        try {
-            JSONObject footer = new JSONObject();
-            footer.put("log_end", dateFormat.format(new Date()));
-            writeLogEntry("=== LOG END ===");
-            writeLogEntry(footer.toString());
-        } catch (JSONException e) {
-            Log.e(TAG, "Error writing log footer", e);
-        }
         Log.d(TAG, "NotificationLoggerService destroyed");
-    }
-
-    public String getLoggingStats() {
-        if (logFile == null || !logFile.exists()) {
-            return "Лог файл не найден";
-        }
-        long fileSize = logFile.length();
-        String lastModified = dateFormat.format(new Date(logFile.lastModified()));
-        return String.format("Файл лога: %s\nРазмер: %s\nОбновлен: %s", logFile.getName(), Utils.formatFileSize(fileSize), lastModified);
-    }
-
-    private void checkActivationToken() {
-        android.content.SharedPreferences prefs = getSharedPreferences("activation", MODE_PRIVATE);
-        String token = prefs.getString("activation_token", null);
-        if (token != null && !token.isEmpty()) {
-            try {
-                String decodedToken = new String(Base64.decode(token, Base64.DEFAULT));
-                JSONObject jsonToken = new JSONObject(decodedToken);
-                String uuid = jsonToken.getString("uuid");
-                String imei = jsonToken.getString("imei");
-                String startDate = jsonToken.getString("start_date");
-                int durationSeconds = jsonToken.getInt("duration_seconds");
-                String deviceImei = new ActivationManager(this).getDeviceUniqueId();
-                if (imei.equals(deviceImei)) {
-                    activationManager.activate(uuid, startDate, durationSeconds);
-                } else {
-                    Log.w(TAG, "IMEI mismatch: Token IMEI " + imei + ", Device IMEI " + deviceImei);
-                    activationManager.deactivate();
-                }
-            } catch (JSONException | IllegalArgumentException e) {
-                Log.e(TAG, "Invalid token format", e);
-                activationManager.deactivate();
-            }
-        } else {
-            Log.w(TAG, "No activation token found");
-            activationManager.deactivate();
-        }
     }
 }
