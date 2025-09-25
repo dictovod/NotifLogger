@@ -170,23 +170,158 @@ public class ActivationManager {
 
     /**
      * Парсит дату в формате ISO (как в Python скрипте)
+     * Улучшенная версия с поддержкой разных форматов времени
      */
     private Date parseISODate(String dateStr) {
-        try {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS", Locale.US);
-            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-            return sdf.parse(dateStr);
-        } catch (ParseException e) {
-            e.printStackTrace();
+        android.util.Log.d("ActivationManager", "Парсинг даты: " + dateStr);
+        
+        // Список различных форматов для парсинга
+        SimpleDateFormat[] formats = {
+            // Стандартный Python isoformat() с микросекундами
+            new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS", Locale.US),
+            // Стандартный Python isoformat() без микросекунд
+            new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US),
+            // С миллисекундами
+            new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.US),
+            // С временной зоной Z
+            new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US),
+            new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
+        };
+        
+        for (SimpleDateFormat format : formats) {
             try {
-                SimpleDateFormat sdfFallback = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US);
-                sdfFallback.setTimeZone(TimeZone.getTimeZone("UTC"));
-                return sdfFallback.parse(dateStr);
-            } catch (ParseException ex) {
-                ex.printStackTrace();
-                return null;
+                // Пробуем сначала как UTC
+                format.setTimeZone(TimeZone.getTimeZone("UTC"));
+                Date result = format.parse(dateStr);
+                android.util.Log.d("ActivationManager", "Дата успешно распарсена как UTC: " + result);
+                return result;
+            } catch (ParseException e) {
+                // Пробуем как локальное время
+                try {
+                    format.setTimeZone(TimeZone.getDefault());
+                    Date result = format.parse(dateStr);
+                    android.util.Log.d("ActivationManager", "Дата успешно распарсена как локальное время: " + result);
+                    return result;
+                } catch (ParseException ex) {
+                    // Продолжаем со следующим форматом
+                }
             }
         }
+        
+        android.util.Log.e("ActivationManager", "Не удалось распарсить дату: " + dateStr);
+        return null;
+    }
+
+    /**
+     * Получает IMEI устройства для отладки
+     */
+    public String getDebugDeviceImei() {
+        return Utils.getDeviceIMEI(context);
+    }
+    
+    /**
+     * Валидирует токен с подробной отладочной информацией (БЕЗ активации)
+     * Используйте этот метод для диагностики проблем с токенами
+     */
+    public String validateTokenDebug(String token) {
+        StringBuilder debug = new StringBuilder();
+        debug.append("=== ОТЛАДКА ТОКЕНА ===\n");
+        
+        try {
+            String deviceImei = Utils.getDeviceIMEI(context);
+            debug.append("IMEI устройства: ").append(deviceImei != null ? deviceImei : "NULL (нет разрешения?)").append("\n");
+            
+            if (token == null || token.trim().isEmpty()) {
+                debug.append("ОШИБКА: Токен пустой или null\n");
+                return debug.toString();
+            }
+            
+            debug.append("Длина токена: ").append(token.length()).append("\n");
+            debug.append("Токен (первые 50 символов): ").append(token.length() > 50 ? token.substring(0, 50) + "..." : token).append("\n");
+            
+            // Декодируем Base64
+            byte[] decodedBytes;
+            try {
+                decodedBytes = Base64.decode(token, Base64.URL_SAFE);
+                debug.append("✓ Base64 декодирование успешно\n");
+            } catch (Exception e) {
+                debug.append("ОШИБКА: Некорректный Base64: ").append(e.getMessage()).append("\n");
+                return debug.toString();
+            }
+            
+            String decodedJson = new String(decodedBytes);
+            debug.append("Декодированный JSON: ").append(decodedJson).append("\n");
+            
+            // Парсим JSON
+            JSONObject tokenData;
+            try {
+                tokenData = new JSONObject(decodedJson);
+                debug.append("✓ JSON парсинг успешен\n");
+            } catch (Exception e) {
+                debug.append("ОШИБКА: Некорректный JSON: ").append(e.getMessage()).append("\n");
+                return debug.toString();
+            }
+            
+            // Получаем данные токена
+            String tokenImei = tokenData.optString("imei", "НЕ НАЙДЕН");
+            String tokenUuid = tokenData.optString("uuid", "НЕ НАЙДЕН");
+            String startDateStr = tokenData.optString("start_date", "НЕ НАЙДЕН");
+            long durationSeconds = tokenData.optLong("duration_seconds", -1);
+            
+            debug.append("Токен IMEI: ").append(tokenImei).append("\n");
+            debug.append("Токен UUID: ").append(tokenUuid).append("\n");
+            debug.append("Дата начала: ").append(startDateStr).append("\n");
+            debug.append("Длительность (сек): ").append(durationSeconds).append("\n");
+            
+            // Сравниваем IMEI
+            if (deviceImei != null) {
+                if (tokenImei.equals(deviceImei)) {
+                    debug.append("✓ IMEI совпадают\n");
+                } else {
+                    debug.append("❌ IMEI НЕ совпадают!\n");
+                    debug.append("  Устройство: '").append(deviceImei).append("'\n");
+                    debug.append("  Токен:     '").append(tokenImei).append("'\n");
+                }
+            } else {
+                debug.append("❌ Не удалось получить IMEI устройства (нет разрешения READ_PHONE_STATE?)\n");
+            }
+            
+            // Парсим и проверяем даты
+            Date startDate = parseISODate(startDateStr);
+            if (startDate != null) {
+                debug.append("✓ Дата начала распарсена: ").append(startDate).append("\n");
+                
+                Date currentDate = new Date();
+                Date expirationDate = new Date(startDate.getTime() + (durationSeconds * 1000));
+                
+                debug.append("Текущее время: ").append(currentDate).append("\n");
+                debug.append("Время окончания: ").append(expirationDate).append("\n");
+                
+                if (currentDate.before(startDate)) {
+                    long diffMin = (startDate.getTime() - currentDate.getTime()) / (1000 * 60);
+                    debug.append("❌ Токен еще не действителен (начнет действовать через ").append(diffMin).append(" мин)\n");
+                } else if (currentDate.after(expirationDate)) {
+                    long diffMin = (currentDate.getTime() - expirationDate.getTime()) / (1000 * 60);
+                    debug.append("❌ Токен истек (").append(diffMin).append(" мин назад)\n");
+                } else {
+                    debug.append("✓ Временные рамки корректны\n");
+                }
+                
+                // Часовые пояса
+                debug.append("Текущий часовой пояс: ").append(TimeZone.getDefault().getID()).append("\n");
+                debug.append("Смещение часового пояса: ").append(TimeZone.getDefault().getRawOffset() / (1000 * 60 * 60)).append(" часов\n");
+                
+            } else {
+                debug.append("❌ Не удалось распарсить дату начала: ").append(startDateStr).append("\n");
+            }
+            
+        } catch (Exception e) {
+            debug.append("КРИТИЧЕСКАЯ ОШИБКА: ").append(e.getMessage()).append("\n");
+            e.printStackTrace();
+        }
+        
+        debug.append("=== КОНЕЦ ОТЛАДКИ ===\n");
+        return debug.toString();
     }
 
     /**

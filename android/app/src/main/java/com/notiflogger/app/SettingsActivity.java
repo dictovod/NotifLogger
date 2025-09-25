@@ -24,6 +24,7 @@ public class SettingsActivity extends AppCompatActivity {
     private TextView imeiTextView;
     private TextInputEditText tokenEditText;
     private Button activateButton;
+    private Button debugButton; // Новая кнопка для отладки токена
     private ImageButton copyButton;
     private LinearLayout errorLayout;
     private TextView errorTextView;
@@ -60,11 +61,17 @@ public class SettingsActivity extends AppCompatActivity {
         activationStatusTextView = findViewById(R.id.tv_activation_status);
         expirationLayout = findViewById(R.id.layout_expiration);
         expirationDateTextView = findViewById(R.id.tv_expiration_date);
+        
+        // Создаем кнопку отладки токена программно
+        createDebugButton();
     }
 
     private void setupClickListeners() {
         copyButton.setOnClickListener(v -> copyImeiToClipboard());
         activateButton.setOnClickListener(v -> performActivation());
+        if (debugButton != null) {
+            debugButton.setOnClickListener(v -> debugToken());
+        }
     }
 
     private void updateUI() {
@@ -182,6 +189,108 @@ public class SettingsActivity extends AppCompatActivity {
                    finish(); // Возвращаемся на главную
                })
                .setCancelable(false)
+               .show();
+    }
+    
+    /**
+     * Создает кнопку отладки токена программно и добавляет её в layout
+     */
+    private void createDebugButton() {
+        try {
+            // Находим родительский контейнер с кнопкой активации
+            View activateButtonParent = findViewById(R.id.btn_activate).getParent().getParent();
+            if (activateButtonParent instanceof LinearLayout) {
+                LinearLayout container = (LinearLayout) activateButtonParent;
+                
+                // Создаем кнопку отладки
+                debugButton = new Button(this);
+                debugButton.setText("🔍 Отладить токен");
+                debugButton.setTextSize(14);
+                debugButton.setBackgroundColor(getColor(android.R.color.holo_orange_light));
+                debugButton.setTextColor(getColor(android.R.color.white));
+                debugButton.setPadding(32, 24, 32, 24);
+                
+                // Параметры размещения
+                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                );
+                params.topMargin = 16;
+                debugButton.setLayoutParams(params);
+                
+                // Добавляем кнопку в контейнер после кнопки активации
+                container.addView(debugButton);
+                
+                android.util.Log.d("SettingsActivity", "Кнопка отладки успешно создана");
+            } else {
+                android.util.Log.e("SettingsActivity", "Не удалось найти контейнер для кнопки отладки");
+            }
+        } catch (Exception e) {
+            android.util.Log.e("SettingsActivity", "Ошибка при создании кнопки отладки: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Отладка токена - показывает подробную информацию о проблемах с токеном
+     */
+    private void debugToken() {
+        String token = tokenEditText.getText().toString().trim();
+        
+        if (TextUtils.isEmpty(token)) {
+            showDebugDialog("Ошибка", "Введите токен для отладки");
+            return;
+        }
+        
+        // Показываем индикатор загрузки
+        if (debugButton != null) {
+            debugButton.setText("🔍 Отладка...");
+            debugButton.setEnabled(false);
+        }
+        
+        // Выполняем отладку в фоновом потоке
+        new Thread(() -> {
+            String debugResult = activationManager.validateTokenDebug(token);
+            
+            runOnUiThread(() -> {
+                // Восстанавливаем кнопку
+                if (debugButton != null) {
+                    debugButton.setText("🔍 Отладить токен");
+                    debugButton.setEnabled(true);
+                }
+                
+                // Показываем результат отладки
+                showDebugDialog("Результат отладки токена", debugResult);
+            });
+        }).start();
+    }
+    
+    /**
+     * Показывает диалог с результатами отладки
+     */
+    private void showDebugDialog(String title, String debugText) {
+        androidx.appcompat.app.AlertDialog.Builder builder = 
+            new androidx.appcompat.app.AlertDialog.Builder(this);
+        
+        // Создаем ScrollView для длинного текста
+        android.widget.ScrollView scrollView = new android.widget.ScrollView(this);
+        TextView textView = new TextView(this);
+        textView.setText(debugText);
+        textView.setTextSize(12);
+        textView.setPadding(32, 32, 32, 32);
+        textView.setTypeface(android.graphics.Typeface.MONOSPACE);
+        
+        scrollView.addView(textView);
+        
+        builder.setTitle(title)
+               .setView(scrollView)
+               .setPositiveButton("Закрыть", (dialog, which) -> dialog.dismiss())
+               .setNeutralButton("Скопировать", (dialog, which) -> {
+                   ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                   ClipData clip = ClipData.newPlainText("Отладка токена", debugText);
+                   clipboard.setPrimaryClip(clip);
+                   Utils.showToast(this, "Результат скопирован в буфер обмена");
+               })
                .show();
     }
 }
