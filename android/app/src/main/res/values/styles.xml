@@ -12,8 +12,14 @@
         <item name="colorOnBackground">@color/text_primary</item>
         <item name="colorSurface">@color/card_background</item>
         <item name="colorOnSurface">@color/text_primary</item>
-        <item name="android:statusBarColor">@color/primary_dark</item>
-        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
+    <!-- Theme for MainActivity without status bar -->
+    <style name="AppTheme.NoStatusBar" parent="AppTheme">
+        <item name="windowNoTitle">true</item>
+        <item name="windowActionBar">false</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowContentOverlay">@null</item>
     </style>
 
     <!-- Card Style -->

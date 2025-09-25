@@ -4,58 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/background">
-
-    <!-- Status Bar Simulation (как в веб-версии) -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="24dp"
-        android:background="#1f2937"
-        android:orientation="horizontal"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:gravity="center_vertical">
-        
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="9:41"
-            android:textColor="@color/white"
-            android:textSize="12sp" />
-        
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-            
-            <View
-                android:layout_width="4dp"
-                android:layout_height="4dp"
-                android:layout_marginEnd="2dp"
-                android:background="@color/white"
-                android:backgroundTint="@color/white" />
-            
-            <View
-                android:layout_width="4dp"
-                android:layout_height="4dp"
-                android:layout_marginEnd="4dp"
-                android:background="@color/white"
-                android:backgroundTint="@color/white" />
-            
-            <FrameLayout
-                android:layout_width="16dp"
-                android:layout_height="8dp"
-                android:background="@drawable/battery_indicator">
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_margin="1dp"
-                    android:background="@color/white" />
-            </FrameLayout>
-        </LinearLayout>
-    </LinearLayout>
+    android:background="@color/background"
+    android:fitsSystemWindows="false">
 
     <!-- App Header -->
     <LinearLayout
@@ -152,12 +102,12 @@
                 android:textColor="@android:color/black"
                 android:layout_marginTop="16dp"
                 android:gravity="center"
-                android:visibility="gone" /> <!-- По умолчанию скрыт, показывается в updateUI -->
+                android:visibility="gone" />
 
         </LinearLayout>
     </ScrollView>
 
-    <!-- Bottom Navigation (опционально) -->
+    <!-- Bottom Navigation -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"

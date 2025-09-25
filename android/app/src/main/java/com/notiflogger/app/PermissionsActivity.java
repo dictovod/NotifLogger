@@ -113,6 +113,7 @@ public class PermissionsActivity extends AppCompatActivity {
             storageStatus.setTextColor(getColor(R.color.error));
             storageButton.setText("Предоставить");
             storageButton.setEnabled(true);
+            Utils.showToast(this, "Пожалуйста, предоставьте доступ к файлам для логирования.");
         }
     }
 
@@ -148,11 +149,16 @@ public class PermissionsActivity extends AppCompatActivity {
             } else {
                 showPermissionDialog(
                     "Доступ к файлам",
-                    "Приложению необходим доступ к файлам для сохранения логов уведомлений.",
+                    "Приложению необходим полный доступ к файлам для сохранения логов. Включите \"Разрешить доступ ко всем файлам\" в настройках.",
                     () -> {
-                        Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
-                        intent.setData(Uri.parse("package:" + getPackageName()));
-                        startActivityForResult(intent, REQUEST_STORAGE_PERMISSION);
+                        try {
+                            Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+                            intent.setData(Uri.parse("package:" + getPackageName()));
+                            startActivityForResult(intent, REQUEST_STORAGE_PERMISSION);
+                        } catch (Exception e) {
+                            Utils.showToast(this, "Не удалось открыть настройки. Включите доступ вручную в настройках приложения.");
+                            Log.e("PermissionsActivity", "Error opening storage settings", e);
+                        }
                     }
                 );
             }
@@ -195,6 +201,13 @@ public class PermissionsActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_STORAGE_PERMISSION && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (Environment.isExternalStorageManager()) {
+                Utils.showToast(this, "Разрешение на доступ к файлам предоставлено");
+            } else {
+                Utils.showToast(this, "Разрешение на доступ к файлам отклонено. Логирование файлов невозможно.");
+            }
+        }
         updatePermissionStates();
     }
 
