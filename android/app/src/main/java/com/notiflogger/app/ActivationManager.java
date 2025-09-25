@@ -24,6 +24,7 @@ public class ActivationManager {
     private static final String TAG = "ActivationManager";
     private final SharedPreferences preferences;
     private final Context context;
+    private static String cachedDeviceId = null;
 
     public ActivationManager(Context context) {
         this.context = context;
@@ -125,20 +126,14 @@ public class ActivationManager {
         writeToDebugFile("Info: Activation data cleared");
     }
 
-    private void saveActivation(String deviceId, long activationTime, long expirationTime, String creationDate) {
-        preferences.edit()
-                .putBoolean(KEY_IS_ACTIVATED, true)
-                .putLong(KEY_ACTIVATION_TIME, activationTime)
-                .putLong(KEY_EXPIRATION_TIME, expirationTime)
-                .putString(KEY_DEVICE_ID, deviceId)
-                .putString(KEY_TOKEN_CREATION_DATE, creationDate)
-                .apply();
-        Log.i(TAG, "Activation data saved: deviceId=" + deviceId + ", creationDate=" + creationDate);
-        writeToDebugFile("Info: Activation data saved: deviceId=" + deviceId + ", creationDate=" + creationDate);
-    }
-
     public String getDeviceUniqueId() {
+        if (cachedDeviceId != null) {
+            Log.d(TAG, "Returning cached Device unique ID: " + cachedDeviceId);
+            writeToDebugFile("Info: Returning cached Device unique ID: " + cachedDeviceId + " (Android version: " + Build.VERSION.SDK_INT + ")");
+            return cachedDeviceId;
+        }
         String deviceId = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
+        cachedDeviceId = deviceId;
         Log.d(TAG, "Device unique ID: " + (deviceId != null ? deviceId : "null"));
         writeToDebugFile("Info: Device unique ID: " + (deviceId != null ? deviceId : "null") + " (Android version: " + Build.VERSION.SDK_INT + ")");
         return deviceId;
@@ -223,6 +218,18 @@ public class ActivationManager {
             creationDate,
             deviceId
         );
+    }
+
+    private void saveActivation(String deviceId, long activationTime, long expirationTime, String creationDate) {
+        preferences.edit()
+                .putBoolean(KEY_IS_ACTIVATED, true)
+                .putLong(KEY_ACTIVATION_TIME, activationTime)
+                .putLong(KEY_EXPIRATION_TIME, expirationTime)
+                .putString(KEY_DEVICE_ID, deviceId)
+                .putString(KEY_TOKEN_CREATION_DATE, creationDate)
+                .apply();
+        Log.i(TAG, "Activation data saved: deviceId=" + deviceId + ", creationDate=" + creationDate);
+        writeToDebugFile("Info: Activation data saved: deviceId=" + deviceId + ", creationDate=" + creationDate);
     }
 
     private void writeToDebugFile(String message) {

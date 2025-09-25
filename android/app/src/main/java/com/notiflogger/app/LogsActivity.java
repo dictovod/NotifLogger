@@ -1,16 +1,19 @@
 package com.notiflogger.app;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
-
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
+import android.util.Log;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -25,11 +28,12 @@ import java.util.Locale;
  * Активность для просмотра логов уведомлений
  */
 public class LogsActivity extends AppCompatActivity {
+    private static final String TAG = "LogsActivity";
+    private static final int STORAGE_PERMISSION_CODE = 100;
     
     private RecyclerView recyclerView;
     private TextView emptyView;
     private TextView statsView;
-    
     private LogsAdapter logsAdapter;
     private List<LogEntry> logEntries;
     private ActivationManager activationManager;
@@ -41,8 +45,15 @@ public class LogsActivity extends AppCompatActivity {
         
         activationManager = new ActivationManager(this);
         
+        // Проверяем разрешения на чтение/запись
+        if (!checkStoragePermissions()) {
+            requestStoragePermissions();
+            return;
+        }
+        
         // Проверяем активацию
         if (!activationManager.isActivated()) {
+            Log.w(TAG, "Application not activated, finishing activity");
             Utils.showToast(this, "Приложение не активировано");
             finish();
             return;
@@ -50,6 +61,33 @@ public class LogsActivity extends AppCompatActivity {
         
         initViews();
         loadLogs();
+    }
+
+    private boolean checkStoragePermissions() {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
+               ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void requestStoragePermissions() {
+        ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                STORAGE_PERMISSION_CODE);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == STORAGE_PERMISSION_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Log.i(TAG, "Storage permissions granted, initializing views and loading logs");
+                initViews();
+                loadLogs();
+            } else {
+                Log.w(TAG, "Storage permissions denied, finishing activity");
+                Utils.showToast(this, "Требуются разрешения для доступа к логам");
+                finish();
+            }
+        }
     }
 
     private void initViews() {
@@ -87,17 +125,20 @@ public class LogsActivity extends AppCompatActivity {
         try {
             File logDir = new File(getExternalFilesDir(null), "notification_logs");
             if (!logDir.exists()) {
-                logDir.mkdirs(); // Создаём директорию, если её нет
+                logDir.mkdirs();
+                Log.i(TAG, "Created log directory: " + logDir.getAbsolutePath());
                 return entries;
             }
             
-            File[] logFiles = logDir.listFiles((dir, name) -> name.endsWith(".json"));
-            if (logFiles == null) {
+            File[] logFiles = logDir.listFiles((dir, name) -> name.endsWith(".json") && !name.equals("debug_activation.log"));
+            if (logFiles == null || logFiles.length == 0) {
+                Log.w(TAG, "No log files found in: " + logDir.getAbsolutePath());
                 return entries;
             }
             
-            // Читаем все лог файлы
+            // Читаем все JSON лог файлы
             for (File logFile : logFiles) {
+                Log.d(TAG, "Reading log file: " + logFile.getName());
                 readLogFile(logFile, entries);
             }
             
@@ -110,7 +151,7 @@ public class LogsActivity extends AppCompatActivity {
             }
             
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(TAG, "Error reading log files: " + e.getMessage(), e);
         }
         
         return entries;
@@ -132,15 +173,17 @@ public class LogsActivity extends AppCompatActivity {
                     LogEntry entry = LogEntry.fromJsonLine(line);
                     if (entry != null) {
                         entries.add(entry);
+                    } else {
+                        Log.w(TAG, "Skipping invalid JSON line in " + logFile.getName() + ": " + line);
                     }
                 } catch (Exception e) {
-                    // Пропускаем некорректные строки
+                    Log.w(TAG, "Error parsing JSON line in " + logFile.getName() + ": " + e.getMessage());
                     continue;
                 }
             }
             
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Error reading file " + logFile.getName() + ": " + e.getMessage(), e);
         }
     }
 
@@ -149,13 +192,13 @@ public class LogsActivity extends AppCompatActivity {
         
         // Подсчитываем статистику
         long todayCount = logEntries.stream()
-            .filter(entry -> isToday(entry.timestamp))
-            .count();
+                .filter(entry -> isToday(entry.timestamp))
+                .count();
         
         String stats = String.format(
-            Locale.getDefault(),
-            "Всего записей: %d • Сегодня: %d",
-            totalCount, todayCount
+                Locale.getDefault(),
+                "Всего записей: %d • Сегодня: %d",
+                totalCount, todayCount
         );
         
         statsView.setText(stats);
@@ -171,6 +214,7 @@ public class LogsActivity extends AppCompatActivity {
             return dayFormat.format(logDate).equals(dayFormat.format(today));
             
         } catch (Exception e) {
+            Log.w(TAG, "Error parsing timestamp: " + timestamp, e);
             return false;
         }
     }
@@ -227,7 +271,7 @@ public class LogsActivity extends AppCompatActivity {
             try {
                 File logDir = new File(getExternalFilesDir(null), "notification_logs");
                 if (logDir.exists()) {
-                    File[] files = logDir.listFiles();
+                    File[] files = logDir.listFiles((dir, name) -> name.endsWith(".json") && !name.equals("debug_activation.log"));
                     if (files != null) {
                         for (File file : files) {
                             file.delete();
@@ -244,6 +288,7 @@ public class LogsActivity extends AppCompatActivity {
                 });
                 
             } catch (Exception e) {
+                Log.e(TAG, "Error clearing logs: " + e.getMessage(), e);
                 runOnUiThread(() -> {
                     Utils.showToast(this, "Ошибка при очистке логов");
                 });
@@ -252,8 +297,6 @@ public class LogsActivity extends AppCompatActivity {
     }
 
     private void exportLogs() {
-        // Простая реализация экспорта
-        // В реальном приложении можно добавить отправку файлов
         Utils.showToast(this, "Функция экспорта в разработке");
     }
 

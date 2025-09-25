@@ -3,13 +3,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/background">
+    android:background="?attr/colorBackground">
 
     <!-- Status Bar Simulation -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="24dp"
-        android:background="#1f2937"
+        android:background="?attr/colorPrimaryDark"
         android:orientation="horizontal"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
@@ -20,7 +20,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="9:41"
-            android:textColor="@color/white"
+            android:textColor="?attr/colorOnPrimary"
             android:textSize="12sp" />
         
         <LinearLayout
@@ -33,13 +33,13 @@
                 android:layout_width="4dp"
                 android:layout_height="4dp"
                 android:layout_marginEnd="2dp"
-                android:background="@color/white" />
+                android:background="?attr/colorOnPrimary" />
             
             <View
                 android:layout_width="4dp"
                 android:layout_height="4dp"
                 android:layout_marginEnd="4dp"
-                android:background="@color/white" />
+                android:background="?attr/colorOnPrimary" />
             
             <FrameLayout
                 android:layout_width="16dp"
@@ -49,7 +49,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_margin="1dp"
-                    android:background="@color/white" />
+                    android:background="?attr/colorOnPrimary" />
             </FrameLayout>
         </LinearLayout>
     </LinearLayout>
@@ -58,7 +58,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:background="@color/primary"
+        android:background="?attr/colorPrimary"
         android:orientation="horizontal"
         android:paddingStart="4dp"
         android:paddingEnd="16dp"
@@ -70,7 +70,7 @@
             android:layout_height="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_arrow_back"
-            android:tint="@color/text_on_primary"
+            android:tint="?attr/colorOnPrimary"
             android:contentDescription="Назад" />
         
         <TextView
@@ -78,7 +78,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Логи уведомлений"
-            android:textColor="@color/text_on_primary"
+            android:textColor="?attr/colorOnPrimary"
             android:textSize="18sp"
             android:textStyle="bold"
             android:gravity="center" />
@@ -88,12 +88,12 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="40dp"
-        android:background="@color/background_secondary"
+        android:background="?attr/colorSurface"
         android:orientation="horizontal"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
         android:gravity="center_vertical"
-        android:elevation="2dp"> <!-- Добавлена тень для выделения -->
+        android:elevation="2dp">
         
         <TextView
             android:id="@+id/tv_stats"
@@ -101,14 +101,14 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Загрузка статистики..."
-            android:textColor="@color/text_secondary"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="12sp" />
         
         <ImageView
             android:layout_width="16dp"
             android:layout_height="16dp"
             android:src="@drawable/ic_logs"
-            android:tint="@color/primary" />
+            android:tint="?attr/colorPrimary" />
     </LinearLayout>
 
     <!-- Content -->
@@ -122,12 +122,12 @@
             android:id="@+id/recycler_logs"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:background="?attr/colorBackground"
             android:clipToPadding="false"
             android:paddingTop="8dp"
             android:paddingBottom="8dp"
             android:paddingStart="8dp"
-            android:paddingEnd="8dp"> <!-- Добавлены боковые отступы -->
-        </androidx.recyclerview.widget.RecyclerView>
+            android:paddingEnd="8dp" />
 
         <!-- Empty State -->
         <LinearLayout
@@ -143,14 +143,14 @@
                 android:layout_width="64dp"
                 android:layout_height="64dp"
                 android:src="@drawable/ic_logs"
-                android:tint="@color/inactive_tint"
+                android:tint="?attr/colorOnSurface"
                 android:layout_marginBottom="16dp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Логи пусты"
-                android:textColor="@color/text_primary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="8dp" />
@@ -159,7 +159,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Уведомления будут появляться здесь\nпосле активации приложения"
-                android:textColor="@color/text_secondary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="14sp"
                 android:gravity="center"
                 android:lineSpacingExtra="2dp" />
