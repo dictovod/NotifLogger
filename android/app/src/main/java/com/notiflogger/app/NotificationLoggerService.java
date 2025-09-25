@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.os.IBinder;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
+import android.util.Base64;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -40,12 +41,14 @@ public class NotificationLoggerService extends NotificationListenerService {
         // Создаем файл для логов
         createLogFile();
         
+        // Проверяем и устанавливаем токен активации
+        checkActivationToken();
+        
         Log.d(TAG, "NotificationLoggerService created");
     }
 
     @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
-        // Проверяем активацию перед логированием
         if (!activationManager.isActivated()) {
             return;
         }
@@ -59,7 +62,6 @@ public class NotificationLoggerService extends NotificationListenerService {
 
     @Override
     public void onNotificationRemoved(StatusBarNotification sbn) {
-        // Проверяем активацию перед логированием
         if (!activationManager.isActivated()) {
             return;
         }
@@ -79,10 +81,7 @@ public class NotificationLoggerService extends NotificationListenerService {
             Notification notification = sbn.getNotification();
             String packageName = sbn.getPackageName();
             
-            // Создаем JSON объект с данными уведомления
             JSONObject logEntry = new JSONObject();
-            
-            // Основная информация
             logEntry.put("timestamp", dateFormat.format(new Date()));
             logEntry.put("action", action);
             logEntry.put("package_name", packageName);
@@ -92,11 +91,8 @@ public class NotificationLoggerService extends NotificationListenerService {
             logEntry.put("tag", sbn.getTag() != null ? sbn.getTag() : "");
             logEntry.put("key", sbn.getKey());
             
-            // Данные уведомления
             if (notification != null) {
                 logEntry.put("ticker", getNotificationText(notification.tickerText));
-                
-                // Извлекаем title и text из extras
                 if (notification.extras != null) {
                     logEntry.put("title", getNotificationText(notification.extras.getCharSequence(Notification.EXTRA_TITLE)));
                     logEntry.put("text", getNotificationText(notification.extras.getCharSequence(Notification.EXTRA_TEXT)));
@@ -104,23 +100,15 @@ public class NotificationLoggerService extends NotificationListenerService {
                     logEntry.put("sub_text", getNotificationText(notification.extras.getCharSequence(Notification.EXTRA_SUB_TEXT)));
                     logEntry.put("info_text", getNotificationText(notification.extras.getCharSequence(Notification.EXTRA_INFO_TEXT)));
                 }
-                
-                // Приоритет и категория
                 logEntry.put("priority", notification.priority);
                 logEntry.put("category", notification.category != null ? notification.category : "");
-                
-                // Флаги
                 logEntry.put("flags", notification.flags);
                 logEntry.put("ongoing", (notification.flags & Notification.FLAG_ONGOING_EVENT) != 0);
                 logEntry.put("auto_cancel", (notification.flags & Notification.FLAG_AUTO_CANCEL) != 0);
             }
-            
-            // Информация о пользователе (для многопользовательских устройств)
             logEntry.put("user_id", sbn.getUserId());
             
-            // Записываем в файл
             writeLogEntry(logEntry.toString());
-            
             Log.d(TAG, "Logged notification: " + packageName + " - " + action);
             
         } catch (JSONException e) {
@@ -137,7 +125,7 @@ public class NotificationLoggerService extends NotificationListenerService {
             ApplicationInfo appInfo = pm.getApplicationInfo(packageName, 0);
             return pm.getApplicationLabel(appInfo).toString();
         } catch (PackageManager.NameNotFoundException e) {
-            return packageName; // Возвращаем имя пакета, если не удалось получить название
+            return packageName;
         }
     }
 
@@ -160,23 +148,18 @@ public class NotificationLoggerService extends NotificationListenerService {
             
             String fileName = "notifications_" + 
                 new SimpleDateFormat("yyyy_MM_dd", Locale.getDefault()).format(new Date()) + ".json";
-            
             logFile = new File(logDir, fileName);
             
             if (!logFile.exists()) {
                 logFile.createNewFile();
-                
-                // Записываем заголовок файла
                 JSONObject header = new JSONObject();
                 header.put("log_start", dateFormat.format(new Date()));
                 header.put("device_info", Utils.getDeviceInfo());
                 header.put("app_version", "1.0.0");
-                
                 writeLogEntry("=== LOG START ===");
                 writeLogEntry(header.toString());
                 writeLogEntry("=== NOTIFICATIONS ===");
             }
-            
         } catch (Exception e) {
             Log.e(TAG, "Error creating log file", e);
         }
@@ -206,19 +189,14 @@ public class NotificationLoggerService extends NotificationListenerService {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        
         try {
-            // Записываем окончание сессии
             JSONObject footer = new JSONObject();
             footer.put("log_end", dateFormat.format(new Date()));
-            
             writeLogEntry("=== LOG END ===");
             writeLogEntry(footer.toString());
-            
         } catch (JSONException e) {
             Log.e(TAG, "Error writing log footer", e);
         }
-        
         Log.d(TAG, "NotificationLoggerService destroyed");
     }
 
@@ -229,15 +207,50 @@ public class NotificationLoggerService extends NotificationListenerService {
         if (logFile == null || !logFile.exists()) {
             return "Лог файл не найден";
         }
-        
         long fileSize = logFile.length();
         String lastModified = dateFormat.format(new Date(logFile.lastModified()));
-        
         return String.format(
             "Файл лога: %s\nРазмер: %s\nОбновлен: %s",
             logFile.getName(),
             Utils.formatFileSize(fileSize),
             lastModified
         );
+    }
+
+    /**
+     * Проверяет и устанавливает токен активации
+     */
+    private void checkActivationToken() {
+        // Предполагаем, что токен хранится в SharedPreferences
+        android.content.SharedPreferences prefs = getSharedPreferences("activation", MODE_PRIVATE);
+        String token = prefs.getString("activation_token", null);
+
+        if (token != null && !token.isEmpty()) {
+            try {
+                // Декодируем Base64
+                String decodedToken = new String(Base64.decode(token, Base64.DEFAULT));
+                JSONObject jsonToken = new JSONObject(decodedToken);
+
+                String uuid = jsonToken.getString("uuid");
+                String imei = jsonToken.getString("imei");
+                String startDate = jsonToken.getString("start_date");
+                int durationSeconds = jsonToken.getInt("duration_seconds");
+
+                // Проверяем IMEI с устройством
+                String deviceImei = Utils.getDeviceIMEI(this);
+                if (imei.equals(deviceImei)) {
+                    activationManager.activate(uuid, startDate, durationSeconds);
+                } else {
+                    Log.w(TAG, "IMEI mismatch: Token IMEI " + imei + ", Device IMEI " + deviceImei);
+                    activationManager.deactivate();
+                }
+            } catch (JSONException | IllegalArgumentException e) {
+                Log.e(TAG, "Invalid token format", e);
+                activationManager.deactivate();
+            }
+        } else {
+            Log.w(TAG, "No activation token found");
+            activationManager.deactivate();
+        }
     }
 }
