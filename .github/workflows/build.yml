@@ -57,9 +57,7 @@ jobs:
 
         # Create app/build.gradle
         cat > app/build.gradle <<'EOF'
-        plugins {
-            id 'com.android.application'
-        }
+        apply plugin: 'com.android.application'
 
         android {
             namespace 'com.example.notificationlogger'
@@ -96,8 +94,21 @@ jobs:
 
         # Create top-level build.gradle
         cat > build.gradle <<'EOF'
-        plugins {
-            id 'com.android.application' version '8.2.0' apply false
+        buildscript {
+            repositories {
+                google()
+                mavenCentral()
+            }
+            dependencies {
+                classpath 'com.android.tools.build:gradle:8.2.0'
+            }
+        }
+
+        allprojects {
+            repositories {
+                google()
+                mavenCentral()
+            }
         }
 
         task clean(type: Delete) {
