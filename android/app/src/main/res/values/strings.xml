@@ -42,4 +42,7 @@
     <string name="menu_permissions">Разрешения</string>
     <string name="menu_logs">Логи уведомлений</string>
     <string name="menu_about">О программе</string>
+    <string name="title_home">Главная</string>
+    <string name="title_permissions">Разрешения</string>
+    <string name="title_logs">Логи</string>
 </resources>
