@@ -16,8 +16,6 @@
         <item name="colorOutline">@color/border</item>
         <item name="colorError">@color/error</item>
         <item name="colorOnError">@color/white</item>
-        
-        <!-- Custom Replit elevations and shadows -->
         <item name="android:windowBackground">@color/background</item>
         <item name="android:statusBarColor">@color/primary</item>
         <item name="android:navigationBarColor">@color/surface</item>
@@ -106,7 +104,7 @@
     </style>
 
     <!-- Modern Replit-inspired Styles -->
-    
+
     <!-- Replit Card Style with modern elevation -->
     <style name="ReplitCard" parent="Widget.Material3.CardView.Elevated">
         <item name="cardCornerRadius">16dp</item>
@@ -171,7 +169,6 @@
     <!-- Replit Text Input -->
     <style name="ReplitTextInput" parent="Widget.Material3.TextInputLayout.OutlinedBox">
         <item name="boxStrokeColor">@color/interactive_normal</item>
-        <item name="boxStrokeColorStateList">@color/interactive_normal</item>
         <item name="hintTextColor">@color/text_tertiary</item>
         <item name="android:textColorHint">@color/text_tertiary</item>
         <item name="boxCornerRadiusTopStart">12dp</item>
@@ -216,5 +213,4 @@
         <item name="android:textColor">@color/log_timestamp</item>
         <item name="android:fontFamily">sans-serif</item>
     </style>
-
 </resources>
