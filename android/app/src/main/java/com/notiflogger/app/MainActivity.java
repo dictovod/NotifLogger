@@ -18,7 +18,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView statusDescription;
     private TextView deviceIdTextView;
     private Button activateButton;
-    private ImageButton settingsButton;
+    // private ImageButton settingsButton; // удалено, кнопка отсутствует в layout
     private ActivationManager activationManager;
 
     @Override
@@ -45,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
         statusDescription = findViewById(R.id.tv_status_description);
         deviceIdTextView = findViewById(R.id.tv_device_id);
         activateButton = findViewById(R.id.btn_activate);
-        settingsButton = findViewById(R.id.btn_settings);
+    // settingsButton = findViewById(R.id.btn_settings); // удалено, кнопка отсутствует в layout
         findViewById(R.id.nav_home).setOnClickListener(v -> {});
         findViewById(R.id.nav_permissions).setOnClickListener(v -> startActivity(new Intent(this, PermissionsActivity.class)));
         findViewById(R.id.nav_logs).setOnClickListener(v -> {
@@ -58,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupClickListeners() {
-        settingsButton.setOnClickListener(v -> openSettings());
+    // settingsButton.setOnClickListener(v -> openSettings()); // удалено, кнопка отсутствует в layout
         activateButton.setOnClickListener(v -> openSettings());
     }
 
