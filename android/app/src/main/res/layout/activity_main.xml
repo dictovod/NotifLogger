@@ -133,7 +133,116 @@
         </LinearLayout>
     </ScrollView>
 
-    <!-- Unified Bottom Navigation -->
-    <include layout="@layout/include_bottom_navigation" />
+    <!-- Modern Replit-style Bottom Navigation -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="68dp"
+        android:background="@color/surface"
+        android:orientation="horizontal"
+        android:elevation="16dp"
+        android:paddingVertical="8dp">
+
+        <FrameLayout
+            android:id="@+id/nav_home"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true">
+            
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="4dp">
+                
+                <ImageView
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:src="@drawable/ic_home"
+                    android:tint="@color/interactive_normal" />
+                
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Главная"
+                    android:textSize="12sp"
+                    android:textColor="@color/interactive_normal"
+                    android:fontFamily="sans-serif-medium"
+                    android:layout_marginTop="4dp" />
+            </LinearLayout>
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/nav_permissions"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true">
+            
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="4dp">
+                
+                <ImageView
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:src="@drawable/ic_permissions"
+                    android:tint="@color/text_tertiary" />
+                
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Разрешения"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_tertiary"
+                    android:fontFamily="sans-serif"
+                    android:layout_marginTop="4dp" />
+            </LinearLayout>
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/nav_logs"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true">
+            
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="4dp">
+                
+                <ImageView
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:src="@drawable/ic_logs"
+                    android:tint="@color/text_tertiary" />
+                
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Логи"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_tertiary"
+                    android:fontFamily="sans-serif"
+                    android:layout_marginTop="4dp" />
+            </LinearLayout>
+        </FrameLayout>
+    </LinearLayout>
 
 </LinearLayout>
