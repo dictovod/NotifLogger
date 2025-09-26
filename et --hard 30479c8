@@ -1,0 +1,359 @@
+[33mcommit 30479c84968cbeb921848e0956805efedb0590fe[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mnew-restore[m[33m, [m[1;31morigin/restore-30479c8[m[33m, [m[1;31morigin/new-restore[m[33m, [m[1;32mrestore-30479c8[m[33m)[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Fri Sep 26 17:00:22 2025 +0400
+
+    1
+
+[33mcommit b202aa96508fa3d2ce4d751e255c64f826cae312[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Fri Sep 26 13:13:08 2025 +0400
+
+    Убрал комментирование
+
+[33mcommit 8598d19e3eb13d7ed5ff71590ef7ba39b4d05a9e[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Fri Sep 26 12:08:14 2025 +0400
+
+    Убрал комментирование
+
+[33mcommit 3cad174dd0af0af7bd27e83866df6dc9c128650b[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Fri Sep 26 00:43:55 2025 +0400
+
+    Убрал комментирование
+
+[33mcommit de07341211db5d53fe721bad6e3f20e1d065f3a8[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Fri Sep 26 00:39:37 2025 +0400
+
+    Убрал комментирование
+
+[33mcommit 14dfc22e3903596d662f8b11cf1bf3d56b61f498[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Fri Sep 26 00:21:44 2025 +0400
+
+    Убрал комментирование
+
+[33mcommit 30c16d19b8c1ad8268a95e0b386b459ccd667b08[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Fri Sep 26 00:17:04 2025 +0400
+
+    Убрал комментирование
+
+[33mcommit f0699adc774bb9f95859c90c6c7db212e423cbb1[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Fri Sep 26 00:03:28 2025 +0400
+
+    Убрал комментирование
+
+[33mcommit 0e232efdfa280c136fd3a7f946d4ddf5c5c43e5f[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Thu Sep 25 23:42:19 2025 +0400
+
+    Убрал комментирование
+
+[33mcommit dbcd89e68ed87441c4ae69645f4da6b1e83e420a[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Thu Sep 25 22:08:07 2025 +0400
+
+    Убрал комментирование
+
+[33mcommit 7180bf7598cad19fe48c2f3c7851797edea0c9cb[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Thu Sep 25 21:58:11 2025 +0400
+
+    Убрал комментирование
+
+[33mcommit 8b403270e3a3f0797e57d7230fa3ca4a248816bb[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Thu Sep 25 21:52:51 2025 +0400
+
+    Убрал комментирование
+
+[33mcommit e719ea9113e2f88ded986b5899c3204df64c3888[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Thu Sep 25 21:43:19 2025 +0400
+
+    Убрал комментирование
+
+[33mcommit 45139b21f1a33c20e8f25a64eaa5578fe1fc98ff[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Thu Sep 25 21:24:49 2025 +0400
+
+    Fix compilation errors: Add ArrayList import, update device ID logic, and handle missing ic_info
+
+[33mcommit 27d5dad2563f15cd103246f57641a379732866f5[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Thu Sep 25 20:49:30 2025 +0400
+
+    Fix compilation errors: Add ArrayList import, update device ID logic, and handle missing ic_info
+
+[33mcommit f91e4ae61f327e332e1b58dcbffb2956356508d4[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Thu Sep 25 20:39:48 2025 +0400
+
+    Fix LogsAdapter: Move packageManager to ViewHolder and resolve itemView issue
+
+[33mcommit d2119024f9fe14ad39c9654218b97f397c6db3b5[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Thu Sep 25 20:33:41 2025 +0400
+
+    Refactor activation logic: Replace IMEI with ANDROID_ID, update permissions, improve UI and logging
+
+[33mcommit d7986d68e7115cec3d3853ae42f87cdb92ccb29e[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Thu Sep 25 19:28:26 2025 +0400
+
+    Update ActivationManager
+
+[33mcommit 45e87f9da70537f880369b2caf211cb9d5b36163[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Thu Sep 25 16:23:57 2025 +0400
+
+    Update ActivationManager, SettingsActivity with ViewParent import, and build.yml
+
+[33mcommit a9e834731d47669520c4228668e73c811d583b92[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Thu Sep 25 16:17:31 2025 +0400
+
+    Update ActivationManager, SettingsActivity, and build.yml
+
+[33mcommit b5584e43415839719ff13008c247210c2c7b1bad[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Thu Sep 25 12:56:50 2025 +0400
+
+    Update ActivationManager and SettingsActivity
+
+[33mcommit d52534fd649c2a4a89f997aab68aa49562278da5[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Thu Sep 25 11:45:02 2025 +0400
+
+    Update Utils.java with Android version-specific IMEI retrieval methods
+
+[33mcommit 35471cde1fb841fab989c3321e40fa2f84b13d67[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Thu Sep 25 11:03:34 2025 +0400
+
+    Add activate and deactivate methods to ActivationManager
+
+[33mcommit fa53662841b1ded5054bce589e0cbf09a11a0711[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Thu Sep 25 11:01:05 2025 +0400
+
+    Improve ISO date parsing and save token in SettingsActivity
+
+[33mcommit 938e1a28af400539ec737ec28128f176ad978d1e[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Thu Sep 25 10:56:28 2025 +0400
+
+    Add Base64 token decoding in NotificationLoggerService
+
+[33mcommit a6d094b7e8aeded00f24a9511371e8429cbfa110[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Thu Sep 25 10:49:11 2025 +0400
+
+    Update build.yml to build only debug APK
+
+[33mcommit ff364be35117c74c3715302133f89969e9db0bbb[m[33m ([m[1;33mtag: [m[1;33mv31[m[33m)[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Thu Sep 25 10:32:52 2025 +0400
+
+    Fix release creation with softprops/action-gh-release@v2
+
+[33mcommit ab9408593355cc0ae0f054368e12aeb2fe64c525[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Thu Sep 25 10:21:56 2025 +0400
+
+    Add gradle-wrapper.jar for Gradle 8.7
+
+[33mcommit d55311ecfd84149ac04d38a4e60372f981abc265[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Thu Sep 25 10:00:31 2025 +0400
+
+    Update GitHub Actions workflow with Gradle Wrapper setup
+
+[33mcommit 30f08447b5667f925425b543757ea5c56690bfbb[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Thu Sep 25 09:47:04 2025 +0400
+
+    Add Android project and GitHub Actions workflow for APK build
+
+[33mcommit 4e14bea938cae0b1a293bfb9717616d4df43c58b[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Thu Sep 25 09:06:13 2025 +0400
+
+    Откатываю
+
+[33mcommit 6ec647fdff3cf6212edfbce850d6f1d633720ee0[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Thu Sep 25 08:59:18 2025 +0400
+
+    build.yml
+
+[33mcommit e6813159f1afe88f4c93a6852c74df6373fc12d0[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Thu Sep 25 08:50:14 2025 +0400
+
+    Компиляция проекта
+
+[33mcommit 2051d63e0cf7fdbab0d92ece879d2008a7baf7bb[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Thu Sep 25 08:29:12 2025 +0400
+
+    Обновлен build.yml для загрузки артефактов
+
+[33mcommit e82df6eb28f11fdbcbdccdef762c8a2370510708[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Thu Sep 25 08:21:11 2025 +0400
+
+    Исправлен код MainActivity.java, добавлен импорт java.util.Date
+
+[33mcommit 0a896096667414e570a05e955d735e366507f08a[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Thu Sep 25 08:07:31 2025 +0400
+
+    Fix token validation and app launch
+
+[33mcommit dd5cdd749e1709dc96a6db887417f14f8c5335f9[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Thu Sep 25 07:58:58 2025 +0400
+
+    IMEI
+
+[33mcommit 7d4ee4121c28036592a8309652980fde67398a05[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Thu Sep 25 07:09:04 2025 +0400
+
+    Fix database table creation and metadata logging
+
+[33mcommit 27b69d571bf62ef51d6fe9b24f6336742f7cf688[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Thu Sep 25 06:54:22 2025 +0400
+
+    add DatabaseHelper.java NotificationListener.java
+
+[33mcommit ec8172e6df33860dd5c2c4a23ec729f61caeb25e[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Thu Sep 25 06:24:32 2025 +0400
+
+    Fix Android Gradle plugin repository issue
+
+[33mcommit 50696f12aa5863fa64bc75c2dcc4314b3e62b645[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Thu Sep 25 06:21:02 2025 +0400
+
+    Fix Android build with proper Gradle wrapper and complete project structure
+
+[33mcommit b34ba557969fa9d9ec8268471554ad79a2693964[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Thu Sep 25 00:38:52 2025 +0400
+
+    Complete rewrite of build workflow with proper Android project structure
+
+[33mcommit 4af8dc84bb5fcdfa1c2a2b5852f1a6e2d52a1e1a[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Thu Sep 25 00:28:57 2025 +0400
+
+    Fix icon copy command with force overwrite
+
+[33mcommit cb8e3749d9218e52a0b92ace6fa25a15a85b3841[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Thu Sep 25 00:23:47 2025 +0400
+
+    Исправлено копирование иконок с принудительной перезаписью
+
+[33mcommit 8094994c735eeb2a0317e95c39cc88461ebeb423[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Thu Sep 25 00:18:17 2025 +0400
+
+    Добавлена иконка Play Store и исправлен запуск приложения
+
+[33mcommit 675ab585f7ea4bf70b0100e0667d04826cf8da33[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Thu Sep 25 00:10:39 2025 +0400
+
+    Обновлён workflow для создания MainActivity.java и main_menu.xml
+
+[33mcommit 9eabeef80d71b761a5117221e6ede04dc96da2f5[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Thu Sep 25 00:02:44 2025 +0400
+
+    Fix duplicate Kotlin classes, update storage path, and enhance UI
+
+[33mcommit c2b1978e8de4e3be207e52f4b20e8247bf7476a3[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Wed Sep 24 23:54:02 2025 +0400
+
+    Update app with external storage, permissions buttons, check, and menu
+
+[33mcommit c842b72c92b3bea2fe0f7d47bca31c3242c35dce[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Wed Sep 24 23:37:06 2025 +0400
+
+    Remove package attribute and add android:exported to AndroidManifest.xml
+
+[33mcommit 7b225307703d51fb6ab605108484852c509436cd[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Wed Sep 24 23:31:36 2025 +0400
+
+    Add tools namespace to AndroidManifest.xml
+
+[33mcommit f976c32ddc89f082ca1dc58c41cb43ceee7a5c80[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Wed Sep 24 23:24:39 2025 +0400
+
+    Add gradle.properties with android.useAndroidX
+
+[33mcommit 27caa3c5f2147ca544c276d2e0e7864857bf32af[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Wed Sep 24 23:18:41 2025 +0400
+
+    Add repositories to build.gradle
+
+[33mcommit 8e02011b37afa7d97b627dfb4fe02a187c43e69d[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Wed Sep 24 23:00:19 2025 +0400
+
+    Add repositories to build.gradle
+
+[33mcommit 59fb17ef1b267be60dae1b205ced158f91fdf466[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Wed Sep 24 22:56:07 2025 +0400
+
+    Remove build script, rely on GitHub Actions
+
+[33mcommit 11a45d7c0a6c13967d4292a1d512889357be6efc[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Wed Sep 24 22:55:17 2025 +0400
+
+    Update workflow to download Gradle and create project structure
+
+[33mcommit 6ca5adf962b1a74bfb447156eccf80c1cdedd572[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Wed Sep 24 22:49:49 2025 +0400
+
+    Initial commit with NotificationLogger project and GitHub Actions workflow
+
+[33mcommit 48569e5e22695ecd4881be88d2cdfa491a8a8552[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Wed Sep 24 22:41:02 2025 +0400
+
+    Обновлён actions/upload-artifact до v4
+
+[33mcommit b3a4ae719fd45e59801d2fff93b6262b06d8016e[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Wed Sep 24 22:34:11 2025 +0400
+
+    Добавлен GitHub Actions workflow для сборки APK
+
+[33mcommit 4dbff180561dae5718bccc393e47ec403da27c9f[m
+Author: lp85d <lp85d@mail.ru>
+Date:   Wed Sep 24 22:22:50 2025 +0400
+
+    Первый коммит: добавлен build-notiflogger.sh
+
+[33mcommit e5063954b3c32deda3f7dc6f75fb6c15135ccf61[m
+Author: Dictovod <dictovod@gmail.com>
+Date:   Wed Sep 24 21:59:08 2025 +0400
+
+    Initial commit
