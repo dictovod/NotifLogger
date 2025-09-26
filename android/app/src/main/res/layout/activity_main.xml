@@ -1,47 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@color/background"
-    android:fitsSystemWindows="false">
+    android:background="@color/background">
 
-    <!-- App Header -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:background="@color/primary"
-        android:orientation="horizontal"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:gravity="center_vertical">
-        
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/app_name"
-            android:textColor="@color/text_on_primary"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-        
-        <ImageButton
-            android:id="@+id/btn_settings"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_settings"
-            android:tint="@color/text_on_primary"
-            android:contentDescription="Настройки" />
-    </LinearLayout>
-
-    <!-- Main Content -->
     <ScrollView
-        android:layout_width="match_parent"
+        android:id="@+id/main_scroll"
+        android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:fillViewport="true">
+        android:fillViewport="true"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/bottom_nav"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -50,14 +23,12 @@
             android:gravity="center"
             android:padding="32dp">
 
-            <!-- Status Icon Container -->
             <FrameLayout
                 android:id="@+id/status_container"
                 android:layout_width="120dp"
                 android:layout_height="120dp"
                 android:layout_marginBottom="32dp"
                 android:background="@drawable/bg_status_inactive">
-                
                 <ImageView
                     android:id="@+id/status_icon"
                     android:layout_width="64dp"
@@ -67,7 +38,6 @@
                     android:contentDescription="Статус активации" />
             </FrameLayout>
 
-            <!-- Status Text -->
             <TextView
                 android:id="@+id/tv_status_title"
                 style="@style/TitleText"
@@ -84,7 +54,6 @@
                 android:layout_marginBottom="32dp"
                 android:text="@string/status_description_not_activated" />
 
-            <!-- Action Button -->
             <Button
                 android:id="@+id/btn_activate"
                 style="@style/PrimaryButton"
@@ -92,7 +61,6 @@
                 android:layout_height="wrap_content"
                 android:text="@string/btn_activate" />
 
-            <!-- Новый элемент для отображения Device ID -->
             <TextView
                 android:id="@+id/tv_device_id"
                 android:layout_width="match_parent"
@@ -107,13 +75,16 @@
         </LinearLayout>
     </ScrollView>
 
-    <!-- Bottom Navigation -->
     <LinearLayout
-        android:layout_width="match_parent"
+        android:id="@+id/bottom_nav"
+        android:layout_width="0dp"
         android:layout_height="56dp"
         android:background="@color/card_background"
         android:orientation="horizontal"
-        android:elevation="8dp">
+        android:elevation="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
         <FrameLayout
             android:id="@+id/nav_home"
@@ -123,20 +94,17 @@
             android:background="?attr/selectableItemBackground"
             android:clickable="true"
             android:focusable="true">
-            
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:orientation="vertical"
                 android:gravity="center">
-                
                 <ImageView
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@drawable/ic_home"
                     android:tint="@color/primary" />
-                
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -155,20 +123,17 @@
             android:background="?attr/selectableItemBackground"
             android:clickable="true"
             android:focusable="true">
-            
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:orientation="vertical"
                 android:gravity="center">
-                
                 <ImageView
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@drawable/ic_permissions"
                     android:tint="@color/text_secondary" />
-                
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -187,20 +152,17 @@
             android:background="?attr/selectableItemBackground"
             android:clickable="true"
             android:focusable="true">
-            
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:orientation="vertical"
                 android:gravity="center">
-                
                 <ImageView
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@drawable/ic_logs"
                     android:tint="@color/text_secondary" />
-                
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -212,4 +174,4 @@
         </FrameLayout>
     </LinearLayout>
 
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
