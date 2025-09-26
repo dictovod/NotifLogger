@@ -45,7 +45,7 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void initViews() {
-        findViewById(R.id.btn_back).setOnClickListener(v -> finish());
+    // findViewById(R.id.btn_back).setOnClickListener(v -> finish()); // элемент удалён из layout
         deviceIdTextView = findViewById(R.id.tv_imei);
         tokenEditText = findViewById(R.id.et_token);
         activateButton = findViewById(R.id.btn_activate);
