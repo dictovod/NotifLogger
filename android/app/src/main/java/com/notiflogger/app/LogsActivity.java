@@ -24,9 +24,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * Активность для просмотра логов уведомлений
- */
 public class LogsActivity extends AppCompatActivity {
     private static final String TAG = "LogsActivity";
     private static final int STORAGE_PERMISSION_CODE = 100;
@@ -45,27 +42,28 @@ public class LogsActivity extends AppCompatActivity {
         
         activationManager = new ActivationManager(this);
         
+        // Проверяем активацию
+        if (!activationManager.isActivated()) {
+            Log.w(TAG, "Application not activated, showing error dialog");
+            showActivationErrorDialog();
+            return;
+        }
+        
         // Проверяем разрешения на чтение/запись
         if (!checkStoragePermissions()) {
             requestStoragePermissions();
             return;
         }
         
-        // Проверяем активацию
-        if (!activationManager.isActivated()) {
-            Log.w(TAG, "Application not activated, finishing activity");
-            Utils.showToast(this, "Приложение не активировано");
-            finish();
-            return;
-        }
-        
+        // Инициализация UI
         initViews();
         loadLogs();
     }
 
     private boolean checkStoragePermissions() {
-        return ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
-               ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+        boolean hasReadPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+        boolean hasWritePermission = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+        return hasReadPermission && hasWritePermission;
     }
 
     private void requestStoragePermissions() {
@@ -83,25 +81,65 @@ public class LogsActivity extends AppCompatActivity {
                 initViews();
                 loadLogs();
             } else {
-                Log.w(TAG, "Storage permissions denied, finishing activity");
-                Utils.showToast(this, "Требуются разрешения для доступа к логам");
-                finish();
+                Log.w(TAG, "Storage permissions denied, showing error dialog");
+                showPermissionErrorDialog();
             }
         }
     }
 
+    private void showActivationErrorDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Ошибка активации")
+                .setMessage("Приложение не активировано. Пожалуйста, активируйте приложение в настройках.")
+                .setIcon(R.drawable.ic_error)
+                .setPositiveButton("Перейти в настройки", (dialog, which) -> {
+                    startActivity(new android.content.Intent(this, SettingsActivity.class));
+                    finish();
+                })
+                .setNegativeButton("Закрыть", (dialog, which) -> finish())
+                .setCancelable(false)
+                .show();
+    }
+
+    private void showPermissionErrorDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Ошибка разрешений")
+                .setMessage("Требуются разрешения для доступа к логам. Пожалуйста, предоставьте их в настройках.")
+                .setIcon(R.drawable.ic_error)
+                .setPositiveButton("Перейти в разрешения", (dialog, which) -> {
+                    startActivity(new android.content.Intent(this, PermissionsActivity.class));
+                    finish();
+                })
+                .setNegativeButton("Закрыть", (dialog, which) -> finish())
+                .setCancelable(false)
+                .show();
+    }
+
     private void initViews() {
-        findViewById(R.id.btn_back).setOnClickListener(v -> finish());
-        
-        recyclerView = findViewById(R.id.recycler_logs);
-        emptyView = findViewById(R.id.tv_empty);
-        statsView = findViewById(R.id.tv_stats);
-        
-        logEntries = new ArrayList<>();
-        logsAdapter = new LogsAdapter(logEntries);
-        
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.setAdapter(logsAdapter);
+        try {
+            findViewById(R.id.btn_back).setOnClickListener(v -> finish());
+            
+            recyclerView = findViewById(R.id.recycler_logs);
+            emptyView = findViewById(R.id.tv_empty);
+            statsView = findViewById(R.id.tv_stats);
+            
+            if (recyclerView == null || emptyView == null || statsView == null) {
+                Log.e(TAG, "One or more views not found in activity_logs layout");
+                Utils.showToast(this, "Ошибка инициализации интерфейса");
+                finish();
+                return;
+            }
+            
+            logEntries = new ArrayList<>();
+            logsAdapter = new LogsAdapter(logEntries);
+            
+            recyclerView.setLayoutManager(new LinearLayoutManager(this));
+            recyclerView.setAdapter(logsAdapter);
+        } catch (Exception e) {
+            Log.e(TAG, "Error initializing views: " + e.getMessage(), e);
+            Utils.showToast(this, "Ошибка инициализации интерфейса");
+            finish();
+        }
     }
 
     private void loadLogs() {
@@ -109,12 +147,17 @@ public class LogsActivity extends AppCompatActivity {
             List<LogEntry> entries = readLogFiles();
             
             runOnUiThread(() -> {
-                logEntries.clear();
-                logEntries.addAll(entries);
-                logsAdapter.notifyDataSetChanged();
-                
-                updateStats();
-                updateEmptyState();
+                try {
+                    logEntries.clear();
+                    logEntries.addAll(entries);
+                    logsAdapter.notifyDataSetChanged();
+                    
+                    updateStats();
+                    updateEmptyState();
+                } catch (Exception e) {
+                    Log.e(TAG, "Error updating UI with logs: " + e.getMessage(), e);
+                    Utils.showToast(this, "Ошибка загрузки логов");
+                }
             });
         }).start();
     }
@@ -136,22 +179,20 @@ public class LogsActivity extends AppCompatActivity {
                 return entries;
             }
             
-            // Читаем все JSON лог файлы
             for (File logFile : logFiles) {
                 Log.d(TAG, "Reading log file: " + logFile.getName());
                 readLogFile(logFile, entries);
             }
             
-            // Сортируем по времени (новые сверху)
             entries.sort((a, b) -> b.timestamp.compareTo(a.timestamp));
             
-            // Ограничиваем количество записей
             if (entries.size() > 1000) {
                 entries = entries.subList(0, 1000);
             }
             
         } catch (Exception e) {
             Log.e(TAG, "Error reading log files: " + e.getMessage(), e);
+            runOnUiThread(() -> Utils.showToast(this, "Ошибка чтения логов"));
         }
         
         return entries;
@@ -164,7 +205,6 @@ public class LogsActivity extends AppCompatActivity {
             while ((line = reader.readLine()) != null) {
                 line = line.trim();
                 
-                // Пропускаем служебные строки
                 if (line.startsWith("===") || line.isEmpty()) {
                     continue;
                 }
@@ -174,7 +214,7 @@ public class LogsActivity extends AppCompatActivity {
                     if (entry != null) {
                         entries.add(entry);
                     } else {
-                        Log.w(TAG, "Skipping invalid JSON line in " + logFile.getName() + ": " + line);
+                        Log.w(TAG, "Invalid JSON line in " + logFile.getName() + ": " + line);
                     }
                 } catch (Exception e) {
                     Log.w(TAG, "Error parsing JSON line in " + logFile.getName() + ": " + e.getMessage());
@@ -190,7 +230,6 @@ public class LogsActivity extends AppCompatActivity {
     private void updateStats() {
         int totalCount = logEntries.size();
         
-        // Подсчитываем статистику
         long todayCount = logEntries.stream()
                 .filter(entry -> isToday(entry.timestamp))
                 .count();
@@ -300,9 +339,6 @@ public class LogsActivity extends AppCompatActivity {
         Utils.showToast(this, "Функция экспорта в разработке");
     }
 
-    /**
-     * Класс для представления записи лога
-     */
     public static class LogEntry {
         public String timestamp;
         public String action;
