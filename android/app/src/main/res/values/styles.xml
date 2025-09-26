@@ -1,17 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Base application theme -->
+    <!-- Replit-inspired Base Theme -->
     <style name="AppTheme" parent="Theme.Material3.DayNight">
         <item name="colorPrimary">@color/primary</item>
-        <item name="colorPrimaryVariant">@color/primary_dark</item>
+        <item name="colorPrimaryVariant">@color/primary_variant</item>
         <item name="colorOnPrimary">@color/text_on_primary</item>
         <item name="colorSecondary">@color/secondary</item>
         <item name="colorSecondaryVariant">@color/secondary_dark</item>
-        <item name="colorOnSecondary">@color/text_on_primary</item>
+        <item name="colorOnSecondary">@color/text_on_secondary</item>
         <item name="android:colorBackground">@color/background</item>
         <item name="colorOnBackground">@color/text_primary</item>
-        <item name="colorSurface">@color/card_background</item>
+        <item name="colorSurface">@color/surface</item>
         <item name="colorOnSurface">@color/text_primary</item>
+        <item name="colorSurfaceVariant">@color/surface_variant</item>
+        <item name="colorOutline">@color/border</item>
+        <item name="colorError">@color/error</item>
+        <item name="colorOnError">@color/white</item>
+        
+        <!-- Custom Replit elevations and shadows -->
+        <item name="android:windowBackground">@color/background</item>
+        <item name="android:statusBarColor">@color/primary</item>
+        <item name="android:navigationBarColor">@color/surface</item>
     </style>
 
     <!-- Theme for MainActivity without status bar -->
@@ -95,4 +104,117 @@
         <item name="android:textAllCaps">true</item>
         <item name="android:letterSpacing">0.1</item>
     </style>
+
+    <!-- Modern Replit-inspired Styles -->
+    
+    <!-- Replit Card Style with modern elevation -->
+    <style name="ReplitCard" parent="Widget.Material3.CardView.Elevated">
+        <item name="cardCornerRadius">16dp</item>
+        <item name="cardElevation">8dp</item>
+        <item name="android:layout_margin">12dp</item>
+        <item name="cardBackgroundColor">@color/card_background_elevated</item>
+        <item name="strokeColor">@color/border_light</item>
+        <item name="strokeWidth">1dp</item>
+    </style>
+
+    <!-- Replit Primary Button with gradient-like appearance -->
+    <style name="ReplitPrimaryButton" parent="Widget.Material3.Button">
+        <item name="android:background">@color/interactive_normal</item>
+        <item name="android:textColor">@color/text_on_primary</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:paddingHorizontal">24dp</item>
+        <item name="android:paddingVertical">16dp</item>
+        <item name="cornerRadius">12dp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:elevation">4dp</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
+
+    <!-- Replit Secondary Button -->
+    <style name="ReplitSecondaryButton" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:textColor">@color/interactive_normal</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="strokeColor">@color/interactive_normal</item>
+        <item name="strokeWidth">2dp</item>
+        <item name="cornerRadius">12dp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:paddingHorizontal">24dp</item>
+        <item name="android:paddingVertical">16dp</item>
+    </style>
+
+    <!-- Replit FAB Style -->
+    <style name="ReplitFAB" parent="Widget.Material3.FloatingActionButton.Primary">
+        <item name="backgroundTint">@color/secondary</item>
+        <item name="tint">@color/text_on_primary</item>
+        <item name="android:elevation">12dp</item>
+        <item name="fabSize">normal</item>
+    </style>
+
+    <!-- Replit Toolbar Style -->
+    <style name="ReplitToolbar" parent="Widget.Material3.Toolbar">
+        <item name="android:background">@color/primary</item>
+        <item name="titleTextColor">@color/text_on_primary</item>
+        <item name="subtitleTextColor">@color/text_on_primary</item>
+        <item name="android:elevation">8dp</item>
+    </style>
+
+    <!-- Replit Bottom Navigation -->
+    <style name="ReplitBottomNavigation" parent="Widget.Material3.BottomNavigationView">
+        <item name="android:background">@color/surface</item>
+        <item name="itemIconTint">@color/interactive_normal</item>
+        <item name="itemTextColor">@color/text_secondary</item>
+        <item name="android:elevation">12dp</item>
+    </style>
+
+    <!-- Replit Text Input -->
+    <style name="ReplitTextInput" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="boxStrokeColor">@color/interactive_normal</item>
+        <item name="boxStrokeColorStateList">@color/interactive_normal</item>
+        <item name="hintTextColor">@color/text_tertiary</item>
+        <item name="android:textColorHint">@color/text_tertiary</item>
+        <item name="boxCornerRadiusTopStart">12dp</item>
+        <item name="boxCornerRadiusTopEnd">12dp</item>
+        <item name="boxCornerRadiusBottomStart">12dp</item>
+        <item name="boxCornerRadiusBottomEnd">12dp</item>
+    </style>
+
+    <!-- Status Active Container -->
+    <style name="StatusActiveContainer">
+        <item name="android:background">@color/success_light</item>
+        <item name="android:padding">16dp</item>
+        <item name="android:elevation">8dp</item>
+    </style>
+
+    <!-- Status Inactive Container -->
+    <style name="StatusInactiveContainer">
+        <item name="android:background">@color/surface_variant</item>
+        <item name="android:padding">16dp</item>
+        <item name="android:elevation">4dp</item>
+    </style>
+
+    <!-- Log Entry Card -->
+    <style name="LogEntryCard">
+        <item name="android:background">@color/card_background</item>
+        <item name="android:padding">16dp</item>
+        <item name="android:layout_marginHorizontal">8dp</item>
+        <item name="android:layout_marginVertical">4dp</item>
+        <item name="android:elevation">2dp</item>
+    </style>
+
+    <!-- Replit App Name Text -->
+    <style name="ReplitAppNameText">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/log_app_name</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <!-- Replit Timestamp Text -->
+    <style name="ReplitTimestampText">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/log_timestamp</item>
+        <item name="android:fontFamily">sans-serif</item>
+    </style>
+
 </resources>

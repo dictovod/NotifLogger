@@ -1,44 +1,73 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Primary Colors (взято из веб-версии) -->
-    <color name="primary">#4f46e5</color>
-    <color name="primary_dark">#3730a3</color>
-    <color name="primary_light">#6366f1</color>
+    <!-- Replit-inspired Primary Colors -->
+    <color name="primary">#5865F2</color>
+    <color name="primary_dark">#4752C4</color>
+    <color name="primary_light">#7289DA</color>
+    <color name="primary_variant">#677BC4</color>
     
-    <!-- Secondary Colors -->
-    <color name="secondary">#ff5722</color>
-    <color name="secondary_dark">#e64a19</color>
-    <color name="secondary_light">#ff7043</color>
+    <!-- Replit Secondary Colors -->
+    <color name="secondary">#00D9FF</color>
+    <color name="secondary_dark">#00B3CC</color>
+    <color name="secondary_light">#33E0FF</color>
     
-    <!-- Accent Colors -->
-    <color name="accent">#16a34a</color>
-    <color name="accent_dark">#15803d</color>
-    <color name="accent_light">#22c55e</color>
+    <!-- Replit Accent Colors -->
+    <color name="accent">#4ECDC4</color>
+    <color name="accent_dark">#3DA399</color>
+    <color name="accent_light">#6FD4CC</color>
     
-    <!-- Background Colors -->
-    <color name="background">#ffffff</color>
-    <color name="background_secondary">#f8fafc</color>
-    <color name="card_background">#ffffff</color>
+    <!-- Replit Background Colors -->
+    <color name="background">#FAFAFA</color>
+    <color name="background_secondary">#F5F7FA</color>
+    <color name="background_tertiary">#EBEEF2</color>
+    <color name="card_background">#FFFFFF</color>
+    <color name="card_background_elevated">#FDFDFD</color>
     
-    <!-- Text Colors -->
-    <color name="text_primary">#1e293b</color>
-    <color name="text_secondary">#64748b</color>
-    <color name="text_on_primary">#ffffff</color>
+    <!-- Replit Text Colors -->
+    <color name="text_primary">#0F1419</color>
+    <color name="text_secondary">#525A63</color>
+    <color name="text_tertiary">#8B949E</color>
+    <color name="text_on_primary">#FFFFFF</color>
+    <color name="text_on_secondary">#0F1419</color>
     
-    <!-- Status Colors -->
-    <color name="success">#16a34a</color>
-    <color name="error">#dc2626</color>
-    <color name="warning">#ca8a04</color>
+    <!-- Replit Status Colors -->
+    <color name="success">#10B981</color>
+    <color name="success_light">#34D399</color>
+    <color name="error">#EF4444</color>
+    <color name="error_light">#F87171</color>
+    <color name="warning">#F59E0B</color>
+    <color name="warning_light">#FBBF24</color>
     
-    <!-- Inactive Filter (для черно-белой иконки) -->
-    <color name="inactive_tint">#9ca3af</color>
+    <!-- Replit Interactive Colors -->
+    <color name="interactive_normal">#5865F2</color>
+    <color name="interactive_hover">#4752C4</color>
+    <color name="interactive_active">#3C45A5</color>
+    <color name="interactive_disabled">#BCC3C7</color>
     
-    <!-- Standard Android Colors -->
+    <!-- Replit Gradients (start colors) -->
+    <color name="gradient_primary_start">#5865F2</color>
+    <color name="gradient_primary_end">#7289DA</color>
+    <color name="gradient_secondary_start">#00D9FF</color>
+    <color name="gradient_secondary_end">#4ECDC4</color>
+    
+    <!-- Standard Colors -->
     <color name="black">#000000</color>
-    <color name="white">#ffffff</color>
+    <color name="white">#FFFFFF</color>
     <color name="transparent">#00000000</color>
     
-    <!-- Border Colors -->
-    <color name="border">#e2e8f0</color>
-    <color name="divider">#f1f5f9</color>
+    <!-- Replit Border & Divider Colors -->
+    <color name="border">#DDE1E6</color>
+    <color name="border_light">#E9ECEF</color>
+    <color name="divider">#F0F3F6</color>
+    
+    <!-- Replit Surface Colors -->
+    <color name="surface">#FFFFFF</color>
+    <color name="surface_variant">#F8FAFC</color>
+    <color name="surface_tint">#5865F2</color>
+    
+    <!-- Special Replit Colors -->
+    <color name="notification_blue">#3B82F6</color>
+    <color name="log_timestamp">#6B7280</color>
+    <color name="log_app_name">#374151</color>
+    <color name="inactive_tint">#9CA3AF</color>
 </resources>
