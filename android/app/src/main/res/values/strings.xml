@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Notification Logger</string>
-    
-    <!-- Main Activity -->
     <string name="status_activated">Приложение активировано</string>
     <string name="status_not_activated">Приложение не активировано</string>
     <string name="status_description_activated">Все функции доступны для использования</string>
@@ -10,8 +8,6 @@
     <string name="btn_go_to_settings">Перейти в настройки</string>
     <string name="btn_activate">Перейти к активации</string>
     <string name="device_id_label">Device ID</string>
-
-    <!-- Settings Activity -->
     <string name="settings_title">Настройки активации</string>
     <string name="device_id_title">Device ID устройства</string>
     <string name="copy_device_id_description">Скопируйте Device ID и отправьте для получения токена активации</string>
@@ -27,8 +23,6 @@
     <string name="build_label">Сборка:</string>
     <string name="version_value">1.0.0</string>
     <string name="build_value">2024.01.01</string>
-    
-    <!-- Toast Messages -->
     <string name="device_id_copied">Device ID скопирован в буфер обмена</string>
     <string name="copy_failed">Не удалось скопировать Device ID</string>
     <string name="activation_success">Приложение успешно активировано</string>
@@ -37,16 +31,14 @@
     <string name="token_required">Введите токен активации</string>
     <string name="token_too_short">Токен слишком короткий</string>
     <string name="validating">Проверка...</string>
-    
-    <!-- Permissions -->
     <string name="permission_notification_title">Доступ к уведомлениям</string>
     <string name="permission_notification_desc">Приложению нужен доступ к уведомлениям для логирования</string>
-    <string name="permission_storage_title">Доступ к хранилищу</string>
+    <string name="permission_storage_title">Доступ к файлам</string>
     <string name="permission_storage_desc">Приложению нужен доступ к хранилищу для сохранения логов</string>
+    <string name="permission_logs_title">Доступ к логам</string>
+    <string name="permission_logs_desc">Необходимо для просмотра логов уведомлений</string>
     <string name="grant_permission">Предоставить разрешение</string>
     <string name="permission_granted">Разрешение предоставлено</string>
-    
-    <!-- Menu -->
     <string name="menu_permissions">Разрешения</string>
     <string name="menu_logs">Логи уведомлений</string>
     <string name="menu_about">О программе</string>
