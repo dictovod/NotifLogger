@@ -1,4 +1,3 @@
-
 #!/bin/sh
 
 if [ -n "${ZSH_VERSION+x}" ]; then

@@ -2,9 +2,15 @@ import os
 
 # Функция для создания файлов с текстом
 def create_file(path, content):
+    # Защита: не трогать скрытые файлы и папки
+    parts = os.path.normpath(path).split(os.sep)
+    if any(p.startswith('.') for p in parts):
+        print(f"Пропуск скрытого файла: {path}")
+        return
+    
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, 'w', encoding='utf-8') as f:
-        f.write(content)
+    with open(path, 'w', encoding='utf-8', newline='') as f:  # newline='' убирает лишние переносы
+        f.write(content.strip())  # Убираем лишние пробелы и символы в начале/конце
 
 project_root = os.getcwd()
 
@@ -148,9 +154,11 @@ main_activity_content = """
 package com.notiflogger.app;
 
 import android.Manifest;
+import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -441,7 +449,7 @@ create_file(os.path.join(project_root, 'app', 'src', 'main', 'res', 'layout', 'i
 </LinearLayout>
 """)
 
-# drawable/ic_launcher.xml (ваш вектор)
+# drawable/ic_launcher.xml
 create_file(os.path.join(project_root, 'app', 'src', 'main', 'res', 'drawable', 'ic_launcher.xml'), """
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
@@ -455,7 +463,7 @@ create_file(os.path.join(project_root, 'app', 'src', 'main', 'res', 'drawable', 
 </vector>
 """)
 
-# drawable/ic_launcher_round.xml (копия для round)
+# drawable/ic_launcher_round.xml
 create_file(os.path.join(project_root, 'app', 'src', 'main', 'res', 'drawable', 'ic_launcher_round.xml'), """
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
@@ -469,7 +477,7 @@ create_file(os.path.join(project_root, 'app', 'src', 'main', 'res', 'drawable', 
 </vector>
 """)
 
-# drawable/ic_launcher_background.xml (фон для адаптивной иконки)
+# drawable/ic_launcher_background.xml
 create_file(os.path.join(project_root, 'app', 'src', 'main', 'res', 'drawable', 'ic_launcher_background.xml'), """
 <?xml version="1.0" encoding="utf-8"?>
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
@@ -478,7 +486,7 @@ create_file(os.path.join(project_root, 'app', 'src', 'main', 'res', 'drawable', 
 </shape>
 """)
 
-# drawable/ic_launcher_foreground.xml (ваш вектор для адаптивной иконки)
+# drawable/ic_launcher_foreground.xml
 create_file(os.path.join(project_root, 'app', 'src', 'main', 'res', 'drawable', 'ic_launcher_foreground.xml'), """
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
@@ -487,7 +495,7 @@ create_file(os.path.join(project_root, 'app', 'src', 'main', 'res', 'drawable', 
     android:viewportHeight="108">
     <path
         android:fillColor="#FF000000"
-        android:pathData="M54,99c4.95,0 9,-4.05 9,-9h-18c0,4.95 4.01,9 9,9zM81,72v-22.5c0,-13.815 -7.38,-25.38 -20.25,-28.44V18c0,-3.735 -3.015,-6.75 -6.75,-6.75s-6.75,3.015 -6.75,6.75v3.06C34.785,24.12 27,35.64 27,49.5v22.5l-9,9v4.5h72v-4.5l-9,-9z"/>
+        android:pathData="M54,99c4.95,0 9,-4.05 9,-9h-18c0,4.95 4.05,9 9,9zM81,72V45c0,-13.54 -7.28,-24.89 -20,-27.88V12c0,-3.73 -3.04,-6.77 -6.77,-6.77S47.46,8.27 47.46,12v5.12C34.28,20.11 27,31.46 27,45v27l-9,9v4.5h72V81l-9,-9z"/>
 </vector>
 """)
 
@@ -495,13 +503,15 @@ create_file(os.path.join(project_root, 'app', 'src', 'main', 'res', 'drawable', 
 create_file(os.path.join(project_root, 'app', 'src', 'main', 'res', 'values', 'colors.xml'), """
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="primary">#3F51B5</color>
+    <color name="primary">#6200EE</color>
+    <color name="primaryDark">#3700B3</color>
+    <color name="accent">#03DAC5</color>
+    <color name="white">#FFFFFF</color>
 </resources>
 """)
 
 # values/strings.xml
 create_file(os.path.join(project_root, 'app', 'src', 'main', 'res', 'values', 'strings.xml'), """
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">NotifLogger</string>
 </resources>
@@ -509,57 +519,11 @@ create_file(os.path.join(project_root, 'app', 'src', 'main', 'res', 'values', 's
 
 # values/styles.xml
 create_file(os.path.join(project_root, 'app', 'src', 'main', 'res', 'values', 'styles.xml'), """
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Theme.NotifLogger" parent="Theme.AppCompat.Light.DarkActionBar">
-        <!-- Customize if needed -->
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/primaryDark</item>
+        <item name="colorAccent">@color/accent</item>
     </style>
 </resources>
 """)
-
-# proguard-rules.pro
-create_file(os.path.join(project_root, 'app', 'proguard-rules.pro'), """
-# Add project specific ProGuard rules here.
-""")
-
-# GitHub Actions build.yml
-create_file(os.path.join(project_root, '.github', 'workflows', 'build.yml'), """
-name: Build Android App
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-
-    - name: Build with Gradle
-      run: ./gradlew build
-
-    - name: Build Release APK
-      run: ./gradlew assembleRelease
-
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: app-release.apk
-        path: app/build/outputs/apk/release/app-release-unsigned.apk
-""")
-
-print("Структура проекта создана успешно! Загрузите содержимое в корень репозитория на GitHub.")
-print("Файл gradlew.bat исключён, так как вы не планируете собирать проект локально на Windows.")

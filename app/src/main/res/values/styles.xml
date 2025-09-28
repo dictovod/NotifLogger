@@ -1,7 +1,7 @@
-
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Theme.NotifLogger" parent="Theme.AppCompat.Light.DarkActionBar">
-        <!-- Customize if needed -->
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/primaryDark</item>
+        <item name="colorAccent">@color/accent</item>
     </style>
 </resources>
